@@ -1,0 +1,78 @@
+#!/bin/bash
+
+DEBUG=${DEBUG:-"0"}
+
+[ "${DEBUG}" = "1" ] && set -x
+
+# Copy manual pages from directory $1 into directory $2 and rename
+# it from aaa.?.gz to aaa.?.$3.gz
+copy_and_rename() {
+    SRC=$1
+    DST=$2
+    L=$3
+
+    # XXX we assume all manual pages are in gz format...
+    for i in "${SRC}/"*.gz; do
+	FNAME=$(basename "$i")
+	# XXX print conflict message if target file already exists
+	cp -avL "$i" "${DST}/${FNAME%.gz}.$L.gz"
+    done
+}
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: extract_rpms <RPM directory> <docserv directory>"
+    exit 1
+fi
+
+INPUT=$1
+DOCSERV=$2/manpages
+
+CPIO_OPTS="--extract --unconditional --preserve-modification-time --make-directories"
+
+# Create files with readable permissions
+umask 0022
+
+mkdir -p "${DOCSERV}"
+
+while IFS= read -r -d '' pkg
+do
+    if rpm -qlp "$pkg" | grep -q "share/man/.*.gz" ; then
+	RPMNAME=$(basename "$pkg")
+	TIMESTAMP=$(date +%Y%m%d%H%M%S)
+	WORKDIR=$(mktemp -p "${DOCSERV}" -dt "$RPMNAME.$TIMESTAMP.XXXXXXXXXX")
+	mkdir -p "${WORKDIR}"
+
+	rpm2cpio "$pkg" | cpio -D "${WORKDIR}" ${CPIO_OPTS}
+
+	NAME=$(rpm -qp "$pkg" --queryformat "%{NAME}")
+
+	mkdir -p "${DOCSERV}/${NAME}"
+	rpm -qp "$pkg" --queryformat "%{VERSION}" > "${DOCSERV}/${NAME}/VERSION"
+
+	for i in "$WORKDIR/usr/share/man/"* ; do
+	    case "$(basename "$i")" in
+		man*)
+		    copy_and_rename "$i" "${DOCSERV}/${NAME}" "en"
+		;;
+		*)
+		    L=$(basename "$i")
+		    for j in "$WORKDIR/usr/share/man/$L/"* ; do
+			case "$(basename "$j")" in
+			    man*)
+				copy_and_rename "$j" "${DOCSERV}/${NAME}" "$L"
+				;;
+			    *)
+				echo "ERROR: Don't know what to do with $j, ignoring" >&2
+				;;
+			esac
+		    done
+		;;
+	    esac
+	done
+
+	rm -rf "${WORKDIR}"
+    fi
+done <  <(find "$INPUT" -name '*.rpm' -print0)
+
+# check for broken symlinks. But cannot happen anymore
+#find ${DOCSERV} -type l ! -exec test -e {} \; -print
