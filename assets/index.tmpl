@@ -1,0 +1,46 @@
+{{ template "header" . }}
+
+<div class="maincontents">
+
+<h1>openSUSE MicroOS Documentation Server</h1>
+
+<p>
+  You’re looking at a repository of manpages and other documentation.
+  <br>There are a couple of different ways to use this repository:
+</p>
+
+<ol>
+  <li>
+    <form method="GET" action="{{ BaseURLPath }}/jump">
+      Directly jump to manpage:
+      <input type="text" name="q" autofocus="autofocus" placeholder="manpage name">
+      <input type="submit" value="Jump to manpage">
+    </form>
+  </li>
+
+  <li>
+    In your browser address bar type the URL of this server and enter the manpage name, hit ENTER.
+  </li>
+
+  <li>
+    Navigate to the manpage’s address, using this URL schema:<br>
+    <code>/&lt;manpages&gt;/&lt;binarypackage&gt;/&lt;manpage&gt;.&lt;section&gt;.&lt;language&gt;.html</code><br>
+    Any part (except <code>&lt;manpage&gt;</code>) can be omitted, and you will be redirected according to our best guess.
+  </li>
+
+  <li>
+    Browse the repository index:
+    <ul>
+      {{ range $idx, $suite := .Suites }}
+      <li>
+       <a href="{{ BaseURLPath }}/contents-{{ $suite }}.html">{{ $suite }}</a>
+      </li>
+      {{ end }}
+    </ul>
+  </li>
+
+</ol>
+
+</div>
+
+{{ template "footer" . }}

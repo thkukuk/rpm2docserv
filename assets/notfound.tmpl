@@ -1,0 +1,23 @@
+{{ template "header" . }}
+
+<div class="maincontents">
+
+{{ if or (ne .BestChoice.Suite "") (eq .Manpage "index") }}
+<p>
+Sorry, I could not find the specific manpage version you requested!
+</p>
+{{ else }}
+<p>
+Sorry, the manpage “{{ .Manpage }}” was not found! Did you spell it correctly?
+</p>
+{{ end }}
+
+{{ if ne .BestChoice.Suite "" }}
+<p>
+Could I maybe offer you the manpage <a href="{{ .BestChoice.ServingPath ".html" }}">{{ .BestChoice.ServingPath ".html" }}</a> instead?
+</p>
+{{ end }}
+
+</div>
+
+{{ template "footer" . }}

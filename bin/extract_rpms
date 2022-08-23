@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 DEBUG=${DEBUG:-"0"}
 
 [ "${DEBUG}" = "1" ] && set -x
@@ -15,7 +17,7 @@ copy_and_rename() {
     for i in "${SRC}/"*.gz; do
 	FNAME=$(basename "$i")
 	# XXX print conflict message if target file already exists
-	cp -avL "$i" "${DST}/${FNAME%.gz}.$L.gz"
+	cp -avL "$i" "${DST}/${FNAME%.gz}.$L.gz" ||:
     done
 }
 
@@ -47,7 +49,6 @@ do
 	NAME=$(rpm -qp "$pkg" --queryformat "%{NAME}")
 
 	mkdir -p "${DOCSERV}/${NAME}"
-	rpm -qp "$pkg" --queryformat "%{VERSION}" > "${DOCSERV}/${NAME}/VERSION"
 
 	for i in "$WORKDIR/usr/share/man/"* ; do
 	    case "$(basename "$i")" in

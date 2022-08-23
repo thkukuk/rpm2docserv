@@ -8,7 +8,7 @@ USE_VENDOR =
 LOCAL_LDFLAGS = -buildmode=pie -ldflags "-X main.rpm2docservVersion=$(VERSION)"
 
 .PHONY: all api build vendor
-all: dep build
+all: dep bundle build
 
 dep: ## Get the dependencies
 	@$(GO) get -v -d ./...
@@ -21,6 +21,9 @@ tidy: ## Clean up dependencies
 
 vendor: dep ## Create vendor directory
 	@$(GO) mod vendor
+
+bundle: ## Generate embedded files
+	$(GO) generate bundle.go
 
 build: ## Build the binary files
 	$(GO) build -v -o $(RPM2DOCSERV_BIN) $(USE_VENDOR) $(LOCAL_LDFLAGS) ./cmd/rpm2docserv

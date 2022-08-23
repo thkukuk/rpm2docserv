@@ -14,25 +14,7 @@
 
 package main
 
-import (
-	"time"
-)
+func extractRPMs(cacheDir string, servingDir string) (error) {
 
-
-func zypperDownload(packages []string, cacheDir string, start time.Time) (error) {
-
-	args := []string{"--pkg-cache-dir", cacheDir,
-		"--disable-system-resolvables",
-		"--non-interactive",
-		"install",
-		"--recommends",
-		"--auto-agree-with-licenses",
-		"--auto-agree-with-product-licenses",
-		"--download-only"}
-
-	args = append (args, packages...)
-
-	err := executeCmd("zypper", args...)
-
-	return err
+	return executeCmd("extract_rpms", cacheDir, servingDir)
 }
