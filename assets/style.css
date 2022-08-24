@@ -1,7 +1,7 @@
 body {
 	color: #000;
 	background-color: white;
-	font-family: 'Roboto', sans-serif;
+	font-family: "Source Sans Pro", sans-serif;
 	font-size: 100%;
 	line-height: 1.2;
 	letter-spacing: 0.15px;
@@ -20,7 +20,7 @@ body {
 	border-left: 1px solid transparent;
 	border-right: 1px solid transparent;
 	border-bottom: 1px solid transparent;
-	width: 50px;
+	width: 70px;
 	height: 5.07em;
 	min-height: 70px;
 }
@@ -77,6 +77,10 @@ p.section a {
 	font-size: .75em;
 }
 
+#navbar {
+	border-bottom: 1px solid #c70036;
+}
+
 #navbar ul {
 	margin: 0;
 	padding: 0;
@@ -89,7 +93,8 @@ p.section a {
 }
 
 #navbar a {
-	display: block;
+        display: block;
+        padding: 1.75em .5em .25em .5em;
 	color: #0035c7;
 	text-decoration: none;
 	border-left: 1px solid transparent;
@@ -98,6 +103,10 @@ p.section a {
 
 #navbar a:hover
 , #navbar a:visited:hover {
+        background-color: #f5f6f7;
+	border-left: 1px solid  #d2d3d7;
+	border-right: 1px solid #d2d3d7;
+	text-decoration: underline;
 	text-decoration: underline;
 }
 
@@ -189,8 +198,6 @@ hr {
 #content p {
     padding-left: 1em;
 }
-
-/* from tracker.debian.org */
 
 a, a:hover, a:focus, a:visited {
     color: #0530D7;
@@ -347,12 +354,9 @@ summary, details {
   border-bottom: 0;
 }
 
-/* end of tracker.debian.org */
-
 .panel {
 float: right;
 clear: right;
-font-family: 'Roboto';
 min-width: 200px;
 }
 
@@ -399,7 +403,7 @@ min-width: 200px;
 /* mandoc styles */
 
 .mandoc, .mandoc pre, .mandoc code {
-    font-family: 'Inconsolata', monospace;
+    font-family: "Source Code Pro", monospace;
     font-size: 1.04rem;
 }
 .mandoc pre {

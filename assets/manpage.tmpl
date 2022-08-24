@@ -20,7 +20,7 @@ links
 <div class="panel toc" role="complementary" style="padding-bottom: 0">
 <details>
 <summary>
-table of contents
+table of contents [v]
 </summary>
 <div class="panel-body">
 <ul class="list-group list-group-flush">
@@ -34,6 +34,7 @@ table of contents
 </details>
 </div>
 
+{{ if gt (len .Suites) 1 }}
 <div class="panel otherversions" role="complementary">
 <div class="panel-heading" role="heading">
 other versions
@@ -50,6 +51,7 @@ other versions
 </ul>
 </div>
 </div>
+{{ end }}
 
 {{ if gt (len .Langs) 1 }}
 <div class="panel otherlangs" role="complementary">
