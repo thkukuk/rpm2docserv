@@ -11,7 +11,6 @@
 <style type="text/css">
 {{ template "style" }}
 </style>
-<link rel="search" title="Manpages" type="application/opensearchdescription+xml" href="/opensearch.xml">
 {{ if and (.HrefLangs) (gt (len .HrefLangs) 1) -}}
 {{ range $idx, $man := .HrefLangs -}}
 <link rel="alternate" href="/{{ $man.ServingPath }}.html" hreflang="{{ $man.LanguageTag }}">
