@@ -57,9 +57,9 @@ Will generate `/srv/docserv` with a default set of patterns resolved.
 ## Customization
 
 A copy of the `assets/` directory can be created and modified. Start
-`rpm2docserv` with `-inject_assets` pointing to the new directory.
+`rpm2docserv` with `-inject-assets` pointing to the new directory.
 Any files whose name does not end in .tmpl are treated as static files
-and will be placed in -serving_dir (compressed and uncompressed).
+and will be placed in -serving-dir uncompressed.
 
 ## TODO
 
