@@ -1,10 +1,10 @@
 package commontmpl
 
 import (
-	"flag"
+	//"flag"
 	"html/template"
-	"log"
-	"net/url"
+	//"log"
+	//"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -32,11 +32,12 @@ var (
 // “https://example.com/sub”, or “” for “https://manpages.debian.org”.
 func BaseURLPath() string {
 	baseURLOnce.Do(func() {
-		u, err := url.Parse(flag.Lookup("base_url").Value.String())
-		if err != nil {
-			log.Fatalf("Invalid -base_url: %v", err)
-		}
-		baseURLPath = u.Path
+//		u, err := url.Parse(flag.Lookup("base_url").Value.String())
+//		if err != nil {
+//			log.Fatalf("Invalid -base_url: %v", err)
+//		}
+//		baseURLPath = u.Path
+		baseURLPath = ""
 	})
 	return baseURLPath
 }
