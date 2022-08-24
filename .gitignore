@@ -1,3 +1,5 @@
 *~
 bin/rpm2docserv
+bin/docserv-auxserver
 RPMs
+docserv
