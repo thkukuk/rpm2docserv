@@ -5,7 +5,7 @@ RUN mkdir -p rpm2docserv
 COPY . rpm2docserv/
 COPY bin/extract_rpms /usr/local/bin
 RUN cd rpm2docserv && make
-RUN mkdir -p /srv/docserv && rpm2docserv/bin/rpm2docserv -serving-dir=/srv/docserv
+RUN mkdir -p /srv/docserv && rpm2docserv/bin/rpm2docserv
 
 FROM registry.opensuse.org/opensuse/nginx:latest
 LABEL maintainer="Thorsten Kukuk <kukuk@thkukuk.de>"
@@ -17,7 +17,7 @@ LABEL org.opencontainers.image.description="Manual pages and documentation to br
 LABEL org.opencontainers.image.created=$BUILDTIME
 LABEL org.opencontainers.image.version=$VERSION
 
-COPY --from=build-stage /var/cache/rpm2docserv /var/tmp/RPMs
 COPY --from=build-stage /srv/docserv /srv/docserv
 COPY --from=build-stage /src/rpm2docserv/bin/* /usr/local/bin
-COPY configs/nginx.conf /usr/local/nginx/etc/
+COPY nginx/nginx.conf /usr/local/nginx/etc/
+COPY nginx/*.sh /docker-entrypoint.d/
