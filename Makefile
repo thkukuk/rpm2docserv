@@ -1,4 +1,5 @@
 RPM2DOCSERV_BIN := bin/rpm2docserv
+AUXSERV_BIN := bin/docserv-auxserv
 
 GO ?= go
 GO_MD2MAN ?= go-md2man
@@ -26,7 +27,7 @@ bundle: ## Generate embedded files
 	$(GO) generate bundle.go
 
 build: ## Build the binary files
-	$(GO) build -v -o $(RPM2DOCSERV_BIN) $(USE_VENDOR) $(LOCAL_LDFLAGS) ./cmd/rpm2docserv
+	$(GO) build -v -o bin/ $(USE_VENDOR) $(LOCAL_LDFLAGS) ./cmd/...
 
 clean: ## Remove previous builds
 	@rm -f $(RPM2DOCSERV_BIN)
@@ -37,10 +38,10 @@ help: ## Display this help screen
 
 .PHONY: release
 release: ## create release package from git
-	git clone https://github.com/thkukuk/mws
-	mv mws mws-$(VERSION)
-	sed -i -e 's|USE_VENDOR =|USE_VENDOR = -mod vendor|g' mws-$(VERSION)/Makefile
-	make -C mws-$(VERSION) vendor
-	cp VERSION mws-$(VERSION)
-	tar --exclude .git -cJf mws-$(VERSION).tar.xz mws-$(VERSION)
-	rm -rf mws-$(VERSION)
+	git clone https://github.com/thkukuk/rpm2docserv
+	mv rpm2docserv rpm2docserv-$(VERSION)
+	sed -i -e 's|USE_VENDOR =|USE_VENDOR = -mod vendor|g' rpm2docserv-$(VERSION)/Makefile
+	make -C rpm2docserv-$(VERSION) vendor
+	cp VERSION rpm2docserv-$(VERSION)
+	tar --exclude .git -cJf rpm2docserv-$(VERSION).tar.xz rpm2docserv-$(VERSION)
+	rm -rf rpm2docserv-$(VERSION)
