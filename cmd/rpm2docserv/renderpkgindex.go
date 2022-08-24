@@ -47,7 +47,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			Mans           []string
 			HrefLangs      []*manpage.Meta
 		}{
-			Title:          fmt.Sprintf("Manpages of %s in Debian %s", first.Package.Binarypkg, first.Package.Suite),
+			Title:          fmt.Sprintf("Manpages of %s", first.Package.Binarypkg),
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
@@ -88,7 +88,7 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 			HrefLangs      []*manpage.Meta
 			Src            string
 		}{
-			Title:          fmt.Sprintf("Manpages of src:%s in Debian %s", src, first.Package.Suite),
+			Title:          fmt.Sprintf("Manpages of src:%s", src),
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
