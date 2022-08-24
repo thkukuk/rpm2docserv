@@ -11,9 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -21,8 +19,6 @@ import (
 	"github.com/thkukuk/rpm2docserv/pkg/commontmpl"
 	"github.com/thkukuk/rpm2docserv/pkg/convert"
 	"github.com/thkukuk/rpm2docserv/pkg/manpage"
-	"github.com/thkukuk/rpm2docserv/pkg/sitemap"
-	"github.com/thkukuk/rpm2docserv/pkg/write"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 )
@@ -40,9 +36,6 @@ var (
 		9,
 		"gzip compression level to use for compressing HTML versions of manpages. defaults to 9 to keep network traffic minimal, but useful to reduce for development/disaster recovery (level 1 results in a 2x speedup!)")
 
-	baseURL = flag.String("base_url",
-		"https://manpages.debian.org",
-		"Base URL (without trailing slash) to the site. Used where absolute URLs are required, e.g. sitemaps.")
 )
 
 type breadcrumb struct {
@@ -340,7 +333,6 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 }
 
 func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalView) error {
-	sitemaps := make(map[string]time.Time)
 
 	suitedirs, err := ioutil.ReadDir(*servingDir)
 	if err != nil {
@@ -358,12 +350,6 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 			return err
 		}
 		defer bins.Close()
-
-		// 20000 is the order of magnitude of binary packages
-		// (containing manpages) in any given Debian suite, so that is
-		// a good value to start with.
-		sitemapEntries := make(map[string]time.Time, 20000)
-		var sitemapEntriesMu sync.RWMutex
 
 		for {
 			names, err := bins.Readdirnames(*manwalkConcurrency)
@@ -387,13 +373,6 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 				bfn := bfn // copy
 				dir := filepath.Join(*servingDir, sfi.Name(), bfn)
 				wg.Go(func() error {
-					// Iterating through the same directory in all
-					// modes increases the chance for the dirents to
-					// still be cached. This is important for machines
-					// like manziarly.debian.org, which do not have
-					// enough RAM to keep all dirents cached over the
-					// runtime of this code path.
-
 					var newestModTime time.Time
 					var err error
 					// Render all regular files first
@@ -414,12 +393,6 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 						return err
 					}
 
-					if !newestModTime.IsZero() {
-						sitemapEntriesMu.Lock()
-						defer sitemapEntriesMu.Unlock()
-						sitemapEntries[bfn] = newestModTime
-					}
-
 					return nil
 				})
 			}
@@ -429,20 +402,8 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 		}
 		bins.Close()
 
-		sitemapPath := filepath.Join(*servingDir, sfi.Name(), "sitemap.xml.gz")
-		if err := write.Atomically(sitemapPath, true, func(w io.Writer) error {
-			return sitemap.WriteTo(w, *baseURL+"/"+sfi.Name(), sitemapEntries)
-		}); err != nil {
-			return err
-		}
-		st, err := os.Stat(sitemapPath)
-		if err == nil {
-			sitemaps[sfi.Name()] = st.ModTime()
-		}
 	}
-	return write.Atomically(filepath.Join(*servingDir, "sitemapindex.xml.gz"), true, func(w io.Writer) error {
-		return sitemap.WriteIndexTo(w, *baseURL, sitemaps)
-	})
+	return nil
 }
 
 func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error {
@@ -489,35 +450,6 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html.gz"), src, manpages); err != nil {
 				return err
 			}
-		}
-	}
-	return nil
-}
-
-func writeSourcesWithManpages(gv globalView) error {
-	for suite := range gv.suites {
-		hasManpages := make(map[string]bool)
-		for _, p := range gv.pkgs {
-			if p.suite != suite {
-				continue
-			}
-			hasManpages[p.source] = true
-		}
-		sourcesWithManpages := make([]string, 0, len(hasManpages))
-		for source := range hasManpages {
-			sourcesWithManpages = append(sourcesWithManpages, source)
-		}
-		sort.Strings(sourcesWithManpages)
-		dest := filepath.Join(*servingDir, suite, "sourcesWithManpages.txt.gz")
-		if err := write.Atomically(dest, true, func(w io.Writer) error {
-			for _, source := range sourcesWithManpages {
-				if _, err := fmt.Fprintln(w, source); err != nil {
-					return err
-				}
-			}
-			return nil
-		}); err != nil {
-			return err
 		}
 	}
 	return nil
@@ -578,10 +510,6 @@ func renderAll(gv globalView) error {
 
 	if err := writeSourceIndex(gv, newestForSource); err != nil {
 		return fmt.Errorf("writing source index: %v", err)
-	}
-
-	if err := writeSourcesWithManpages(gv); err != nil {
-		return fmt.Errorf("writing sourcesWithManpages: %v", err)
 	}
 
 	suitedirs, err := ioutil.ReadDir(*servingDir)
