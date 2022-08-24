@@ -85,6 +85,7 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 	var stats stats
 	res := globalView{
 		suites:        make(map[string]bool, 1),
+		idxSuites:     make(map[string]string, 1),
 		xref:          make(map[string][]*manpage.Meta),
 		stats:         &stats,
 		start:         start,
@@ -93,6 +94,7 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 	// we currently have only a "dummy" suite, manpages
 	suite := "manpages"
 	res.suites[suite] = true
+	res.idxSuites[suite] = suite
 	// and a dummy component
 	component := "unknown"
 
