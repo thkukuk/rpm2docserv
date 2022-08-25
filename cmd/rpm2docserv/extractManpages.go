@@ -61,7 +61,8 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 		for _, f := range p.manpageList {
 			m, err :=  manpage.FromManPath(strings.TrimPrefix(f, manPrefix), nil)
 			if err != nil {
-				return fmt.Errorf("Trying to interpret path %q: %v", f, err)
+				// not well formated manual page, already reported, ignore it
+				continue
 			}
 
 			targetdir := filepath.Join(servingDir, p.suite, p.binarypkg)
@@ -83,9 +84,18 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 			if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 				link, _ := filepath.EvalSymlinks(srcf)
 				if len(link) > 0 {
-					srcf = link
+					if !strings.HasPrefix(link, tmpdir) {
+						// XXX if we have no tmpdir prefix, this is going somewhere else,
+						// most likely an update-alternative symlink from the host. Ignore.
+						log.Printf("Ignoring symlink pointing outside: %q from %q\n", link, p.binarypkg)
+						continue
+						// update-alternative/absolute links don't have tmpdir prefix
+						// srcf = filepath.Join(tmpdir, link)
+					} else {
+						srcf = link
+					}
 				} else {
-					log.Printf("Ignoring dangling symlink %q\n", f)
+					log.Printf("Ignoring dangling symlink %q from %q\n", f, p.binarypkg)
 					continue
 				}
 			}
@@ -93,7 +103,8 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 			dstf := filepath.Join(targetdir, m.Name + "." + m.Section + "." + m.Language + ".gz")
 			err = os.Link(srcf, dstf)
 			if err != nil {
-				return fmt.Errorf("Cannot hardlink %q to %q: %v", srcf, dstf, err)
+				log.Printf("Cannot hardlink %q to %q: %v", srcf, dstf, err)
+				continue
 			}
 		}
 
