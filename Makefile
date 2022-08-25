@@ -42,6 +42,6 @@ release: ## create release package from git
 	mv rpm2docserv rpm2docserv-$(VERSION)
 	sed -i -e 's|USE_VENDOR =|USE_VENDOR = -mod vendor|g' rpm2docserv-$(VERSION)/Makefile
 	make -C rpm2docserv-$(VERSION) vendor
-	cp VERSION rpm2docserv-$(VERSION)
+	#cp VERSION rpm2docserv-$(VERSION)
 	tar --exclude .git -cJf rpm2docserv-$(VERSION).tar.xz rpm2docserv-$(VERSION)
 	rm -rf rpm2docserv-$(VERSION)

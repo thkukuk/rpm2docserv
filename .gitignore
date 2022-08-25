@@ -3,3 +3,4 @@ bin/rpm2docserv
 bin/docserv-auxserver
 RPMs
 docserv
+rpm2docserv-*.tar.xz
