@@ -45,6 +45,10 @@ var (
 		false,
 		"Use packages from local cache, no new download")
 
+        verbose = flag.Bool("verbose",
+		false,
+		"Print additional status messages")
+
 	showVersion = flag.Bool("version",
 		false,
 		"Show rpm2docserv version and exit")
@@ -58,6 +62,7 @@ func logic() error {
 
 	// Stage 1: Download specified packages and their dependencies
 	if !*noDownload {
+		log.Printf("Downloading RPMs...\n");
 		err := zypperDownload(strings.Split(*pkg2Render, ","), *cacheDir, start)
 		if err != nil {
 			return fmt.Errorf("downloading packages: %v", err)
@@ -65,6 +70,7 @@ func logic() error {
 	}
 
 	/* Stage 2: build globalView.pkgs by reading from disk */
+	log.Printf("Gathering all packages...\n");
 	globalView, err := buildGlobalView (*cacheDir, start)
 	log.Printf("Gathered all packages, total %d packages", len(globalView.pkgs))
 
@@ -75,7 +81,7 @@ func logic() error {
 	}
 	log.Printf("Extracted all manpages")
 
-	log.Printf("Now rendering")
+	log.Printf("Rendering manpages...\n")
 	// Stage 4: all man pages are rendered into an HTML representation
 	// using mandoc(1), directory index files are rendered, contents
 	// files are rendered.
@@ -120,9 +126,11 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	if *showVersion {
+	if *showVersion || *verbose {
 		fmt.Printf("rpm2docserv %s\n", rpm2docservVersion)
-		return
+		if !*verbose {
+			return
+		}
 	}
 
 	if *injectAssets != "" {

@@ -3,7 +3,6 @@ WORKDIR /src
 RUN zypper clean && zypper ref && zypper --non-interactive install --no-recommends mandoc go make git findutils cpio
 RUN mkdir -p rpm2docserv
 COPY . rpm2docserv/
-COPY bin/extract_rpms /usr/local/bin
 RUN cd rpm2docserv && make
 RUN mkdir -p /srv/docserv && rpm2docserv/bin/rpm2docserv
 

@@ -282,7 +282,9 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		})
 	}
 
-	log.Printf("rendering %q", job.dest)
+	if *verbose {
+		log.Printf("rendering %q", job.dest)
+	}
 
 	suites := make([]*manpage.Meta, 0, len(job.versions))
 	for _, v := range job.versions {

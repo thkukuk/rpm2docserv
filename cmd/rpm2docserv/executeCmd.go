@@ -38,7 +38,9 @@ func executeCmd(command string, arg ...string) (error) {
 		log.Printf("Error invoking " + command + ": " + fmt.Sprint(err) + "\n" + stderr.String())
 		return err
 	} else {
-		log.Printf(out.String())
+		if *verbose {
+			log.Printf(out.String())
+		}
 	}
 
 	return err
