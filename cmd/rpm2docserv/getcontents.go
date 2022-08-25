@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/thkukuk/rpm2docserv/pkg/rpm"
@@ -39,11 +40,18 @@ func getContents(suite string, pkgs []*pkgEntry) ([]*contentEntry, error) {
 					filename:  strings.TrimPrefix(filename, manPrefix),
 				})
 
-				// if pkg.manpageList == nil {
-				//	pkg.manpageList = make([]*string, 0, 1)
-				//}
 				pkg.manpageList = append(pkg.manpageList, filename)
 			}
+		}
+		if  len(pkg.manpageList) > 0 {
+			// sort by lenght of string means, ../man/fr/man?/... will come
+			// before ../man/fr.UTF-8/man?/...
+			// Same for fr.ISO8859-1
+			// The code is not designed to handle different encodings, doesn't
+			// make any sense and is not needed.
+			sort.Slice(pkg.manpageList, func(i, j int) bool {
+				return len(pkg.manpageList[i]) < len(pkg.manpageList[j])
+			})
 		}
 	}
 
