@@ -69,7 +69,7 @@ func logic() error {
 	log.Printf("Gathered all packages, total %d packages", len(globalView.pkgs))
 
 	// Stage 3: Extract manual pages from packages and rename them
-	err = extractRPMs(*cacheDir, *servingDir)
+	err = extractManpagesAll(*cacheDir, *servingDir, globalView)
 	if err != nil {
 		return fmt.Errorf("extracing manual pages: %v", err)
 	}

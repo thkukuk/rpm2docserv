@@ -16,12 +16,13 @@ import (
 )
 
 type pkgEntry struct {
-        source    string
-	suite     string
-        binarypkg string
-        arch      string
-        filename  string
-        version   string
+        source     string
+	suite      string
+        binarypkg  string
+        arch       string
+        filename   string
+        version    string
+	manpageList []string
 }
 
 type stats struct {
@@ -57,7 +58,7 @@ func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*m
         if _, ok := latestVersion[key]; !ok {
                 return fmt.Errorf("Could not determine latest version")
         }
-        m, err := manpage.FromManPath(strings.TrimPrefix(filename, "usr/share/man/"), latestVersion[key])
+        m, err := manpage.FromManPath(strings.TrimPrefix(filename, manPrefix), latestVersion[key])
         if err != nil {
                 return fmt.Errorf("Trying to interpret path %q: %v", filename, err)
         }

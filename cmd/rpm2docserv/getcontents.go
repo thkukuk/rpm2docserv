@@ -17,6 +17,8 @@ var manPrefix = "/usr/share/man/"
 var gzSuffix = ".gz"
 
 
+// go through all RPMs, get the filelist, and store the filename of
+// all manual pages found in an RPM
 func getContents(suite string, pkgs []*pkgEntry) ([]*contentEntry, error) {
 
 	var entries []*contentEntry
@@ -36,6 +38,11 @@ func getContents(suite string, pkgs []*pkgEntry) ([]*contentEntry, error) {
 					binarypkg: pkg.binarypkg,
 					filename:  strings.TrimPrefix(filename, manPrefix),
 				})
+
+				// if pkg.manpageList == nil {
+				//	pkg.manpageList = make([]*string, 0, 1)
+				//}
+				pkg.manpageList = append(pkg.manpageList, filename)
 			}
 		}
 	}
