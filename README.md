@@ -63,5 +63,7 @@ and will be placed in -serving-dir uncompressed.
 
 ## TODO
 
+* Delete manual page from list if the source is broken
+* Handle .so redirects
 * Document how to configure and use https
 * https://www.sitemaps.org/ - Write extra tool to create sitemaps.xml files. Since this files contain the hostname, but we want to be independ in a container, create this files on demand when starting the container
