@@ -75,6 +75,11 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 			// file the symlink points to as target file with the old name
 			srcf := filepath.Join(tmpdir, f)
 			fileInfo, err := os.Lstat(srcf)
+			if err != nil {
+				// ignore this manual page
+				log.Printf("Error in lstat(%q) from %q: %v", srcf, p.binarypkg, err)
+				continue
+			}
 			if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 				link, _ := filepath.EvalSymlinks(srcf)
 				if len(link) > 0 {
