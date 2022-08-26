@@ -2,6 +2,7 @@ package convert
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -103,9 +105,15 @@ func (p *Process) mandoc(r io.Reader) (stdout string, stderr string, err error) 
 	return stdout, stderr, err
 }
 
+// Kill mandoc after some time, it should never take more than a minute
+// if it does, something is broken.
 func (p *Process) mandocFork(r io.Reader) (stdout string, stderr string, err error) {
 	var stdoutb, stderrb bytes.Buffer
-	cmd := exec.Command("mandoc", "-Ofragment", "-Thtml")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
+        defer cancel()
+
+	cmd := exec.CommandContext(ctx, "mandoc", "-Ofragment", "-Thtml")
 	cmd.Stdin = r
 	cmd.Stdout = &stdoutb
 	cmd.Stderr = &stderrb
