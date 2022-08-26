@@ -50,7 +50,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			Title:          fmt.Sprintf("Manpages of %s", first.Package.Binarypkg),
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
-				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
+				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},
 				{fmt.Sprintf("/%s/%s/index.html", first.Package.Suite, first.Package.Binarypkg), first.Package.Binarypkg},
 				{"", "Contents"},
 			},
@@ -91,7 +91,7 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 			Title:          fmt.Sprintf("Manpages of src:%s", src),
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
-				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
+				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},
 				{fmt.Sprintf("/%s/src:%s/index.html", first.Package.Suite, src), "src:" + src},
 				{"", "Contents"},
 			},

@@ -33,7 +33,7 @@
     <ul>
       {{ range $idx, $suite := .Suites }}
       <li>
-       <a href="{{ BaseURLPath }}/contents-{{ $suite }}.html">{{ $suite }}</a>
+       <a href="{{ BaseURLPath }}/{{ $suite }}/index.html">{{ $suite }}</a>
       </li>
       {{ end }}
     </ul>

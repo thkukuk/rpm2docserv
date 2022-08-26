@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/thkukuk/rpm2docserv/pkg/bundled"
@@ -36,7 +34,7 @@ func renderContents(dest, suite string, bins []string) error {
 			Title:          fmt.Sprintf("Contents"),
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
-				{fmt.Sprintf("/contents-%s.html", suite), suite},
+				{fmt.Sprintf("/%s/index.html", suite), suite},
 				{"", "Contents"},
 			},
 			Bins:  bins,
@@ -46,10 +44,5 @@ func renderContents(dest, suite string, bins []string) error {
 		return err
 	}
 
-	destPath := filepath.Join(*servingDir, suite, "index.html.gz")
-	link := fmt.Sprintf("../contents-%s.html.gz", suite)
-	if err := os.Symlink(link, destPath); err != nil && !os.IsExist(err) {
-		return err
-	}
 	return nil
 }

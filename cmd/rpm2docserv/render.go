@@ -534,7 +534,7 @@ func renderAll(gv globalView) error {
 			return err
 		}
 
-		if err := renderContents(filepath.Join(*servingDir, fmt.Sprintf("contents-%s.html.gz", sfi.Name())), sfi.Name(), names); err != nil {
+		if err := renderContents(filepath.Join(*servingDir, sfi.Name(), "index.html.gz",), sfi.Name(), names); err != nil {
 			return err
 		}
 

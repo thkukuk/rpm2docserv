@@ -407,7 +407,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		Title:          title,
 		Rpm2docservVersion: rpm2docservVersion,
 		Breadcrumbs: breadcrumbs{
-			{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
+			{fmt.Sprintf("/%s/index.html", meta.Package.Suite), meta.Package.Suite},
 			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
 			{"", shorttitle},
 		},
