@@ -68,11 +68,14 @@ func logic() error {
 			return fmt.Errorf("downloading packages: %v", err)
 		}
 	}
+	stage2 := time.Now()
 
 	/* Stage 2: build globalView.pkgs by reading from disk */
 	log.Printf("Gathering all packages...\n");
 	globalView, err := buildGlobalView (*cacheDir, start)
 	log.Printf("Gathered all packages, total %d packages", len(globalView.pkgs))
+
+	stage3 := time.Now()
 
 	// Stage 3: Extract manual pages from packages and rename them
 	err = extractManpagesAll(*cacheDir, *servingDir, globalView)
@@ -81,6 +84,8 @@ func logic() error {
 	}
 	log.Printf("Extracted all manpages")
 
+	stage4 := time.Now()
+
 	log.Printf("Rendering manpages...\n")
 	// Stage 4: all man pages are rendered into an HTML representation
 	// using mandoc(1), directory index files are rendered, contents
@@ -88,14 +93,13 @@ func logic() error {
 	if err := renderAll(globalView); err != nil {
 		return fmt.Errorf("rendering manpages: %v", err)
 	}
-
 	log.Printf("Rendered all manpages, writing index")
 
-	// Stage 5: write the index only after all rendering is complete,
-	// otherwise debiman-auxserver might serve redirects to pages
-	// which cannot be served yet.
+	stage5 := time.Now()
+
+	// Stage 5: write the index after all rendering is complete.
 	path := strings.Replace(*indexPath, "<serving_dir>", *servingDir, -1)
-	log.Printf("Writing debiman-auxserver index to %q", path)
+	log.Printf("Writing docserv-auxserver index to %q", path)
 	if err := writeIndex(path, globalView); err != nil {
 		return fmt.Errorf("writing index: %v", err)
 	}
@@ -104,13 +108,20 @@ func logic() error {
 		return fmt.Errorf("rendering aux files: %v", err)
 	}
 
+	finish := time.Now()
+
 	fmt.Printf("total number of packages: %d\n", len(globalView.pkgs))
-	fmt.Printf("packages extracted:       %d\n", globalView.stats.PackagesExtracted)
+	fmt.Printf("packages with manpages:   %d\n", globalView.stats.PackagesExtracted)
 	fmt.Printf("manpages rendered:        %d\n", globalView.stats.ManpagesRendered)
 	fmt.Printf("total manpage bytes:      %d\n", globalView.stats.ManpageBytes)
 	fmt.Printf("total HTML bytes:         %d\n", globalView.stats.HTMLBytes)
 	fmt.Printf("auxserver index bytes:    %d\n", globalView.stats.IndexBytes)
-	fmt.Printf("wall-clock runtime (s):   %d\n", int(time.Now().Sub(start).Seconds()))
+	fmt.Printf("download packages (s):    %d\n", int(stage2.Sub(start).Seconds()))
+	fmt.Printf("gather all packages (s):  %d\n", int(stage3.Sub(stage2).Seconds()))
+	fmt.Printf("extract all manpages (s): %d\n", int(stage4.Sub(stage3).Seconds()))
+	fmt.Printf("render all manpages (s):  %d\n", int(stage5.Sub(stage4).Seconds()))
+	fmt.Printf("write index (s):          %d\n", int(finish.Sub(stage5).Seconds()))
+	fmt.Printf("wall-clock runtime (s):   %d\n", int(finish.Sub(start).Seconds()))
 
 	return write.Atomically(filepath.Join(*servingDir, "metrics.txt"), false, func(w io.Writer) error {
 		if err := writeMetrics(w, globalView, start); err != nil {
