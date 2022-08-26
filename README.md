@@ -63,7 +63,9 @@ and will be placed in -serving-dir uncompressed.
 
 ## TODO
 
-* Delete manual page from list if the source is broken
+* Broken manual pages are not rendered but still part of xref/auxserver
 * Handle .so redirects
+* Create index of packages containing the same manual page ("conflicting packages")
+* Try to find out to which manual page update-alternatives will point...
 * Document how to configure and use https
 * https://www.sitemaps.org/ - Write extra tool to create sitemaps.xml files. Since this files contain the hostname, but we want to be independ in a container, create this files on demand when starting the container
