@@ -57,16 +57,26 @@ func SplitRPMname(rpm string) (name string, version string, release string, arch
 
 	// get architecture
 	lastInd := strings.LastIndex(str, ".")
+	if lastInd == -1 {
+		return "", "", "", "", errors.New("No full RPM name")
+	}
+
 	arch = str[lastInd+1:]
 	str = str[:lastInd]
 
 	// get release
 	lastInd = strings.LastIndex(str, "-")
+	if lastInd == -1 {
+		return "", "", "", "", errors.New("No full RPM name")
+	}
 	release = str[lastInd+1:]
 	str = str[:lastInd]
 
 	// get version and package name
 	lastInd = strings.LastIndex(str, "-")
+	if lastInd == -1 {
+		return "", "", "", "", errors.New("No full RPM name")
+	}
 	version = str[lastInd+1:]
 	name = str[:lastInd]
 
