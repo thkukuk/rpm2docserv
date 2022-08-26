@@ -27,7 +27,14 @@ import (
 	"github.com/thkukuk/rpm2docserv/pkg/manpage"
 )
 
+type manLinks struct {
+	source string
+	target string
+}
+
 func extractManpages(cacheDir string, servingDir string, suite string, gv globalView) (error) {
+
+	var missing []*manLinks
 
 	for _, p := range gv.pkgs {
 		if p.suite != suite {
@@ -72,6 +79,8 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 				return fmt.Errorf("Cannot create target dir %q: %v", targetdir, err)
 			}
 
+			dstf := filepath.Join(targetdir, m.Name + "." + m.Section + "." + m.Language + ".gz")
+
 			// check if the source file (manual page) is a symlink. If yes, hardlink the
 			// file the symlink points to as target file with the old name
 			srcf := filepath.Join(tmpdir, f)
@@ -89,18 +98,27 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 						// most likely an update-alternative symlink from the host. Ignore.
 						log.Printf("Ignoring symlink pointing outside: %q from %q\n", link, p.binarypkg)
 						continue
-						// update-alternative/absolute links don't have tmpdir prefix
-						// srcf = filepath.Join(tmpdir, link)
 					} else {
 						srcf = link
 					}
 				} else {
-					log.Printf("Ignoring dangling symlink %q from %q\n", f, p.binarypkg)
+					// Most likely the source file is in another RPM, so save this and
+					// try it later again.
+					link, err = os.Readlink(srcf)
+					if err != nil {
+						// ignore this manual page
+						log.Printf("Error in Readlink(%q) from %q: %v", srcf, p.binarypkg, err)
+						continue
+					}
+
+					missing = append (missing, &manLinks{
+						source: filepath.Join(filepath.Dir(f),link),
+						target: dstf,
+					})
 					continue
 				}
 			}
 
-			dstf := filepath.Join(targetdir, m.Name + "." + m.Section + "." + m.Language + ".gz")
 			err = os.Link(srcf, dstf)
 			if err != nil {
 				log.Printf("Cannot hardlink %q to %q: %v", srcf, dstf, err)
@@ -110,6 +128,34 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 
 		atomic.AddUint64(&gv.stats.PackagesExtracted, 1)
 	}
+
+	for _, s := range missing {
+		m, err :=  manpage.FromManPath(strings.TrimPrefix(s.source, manPrefix), nil)
+		if err != nil {
+			log.Printf("Error with dangling symlink: src=%q, dst=%q, err=%v\n", s.source, s.target, err)
+			continue
+		}
+
+		found := false
+		x := gv.xref[m.Name]
+		for _, y := range x {
+			if suite == y.Package.Suite {
+				srcf := filepath.Join(servingDir, y.ServingPath() + ".gz")
+				err = os.Link(srcf, s.target)
+				if err != nil {
+					log.Printf("Cannot hardlink %q to %q: %v", srcf, s.target, err)
+					continue
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Printf("Dangling symlink: src=%q, dst=%q\n", s.source, s.target)
+			continue
+		}
+	}
+
 	return nil
 }
 
