@@ -148,7 +148,7 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 		log.Println(err)
 	}
 
-	content, err := getAllContents(suite, res.pkgs)
+	err = getAllContents(suite, res.pkgs)
 	if err != nil {
 		return res, err
 	}
@@ -156,10 +156,16 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 	knownIssues := make(map[string][]error)
 
 	// Build a global view of all the manpages (required for cross-referencing).
-	for _, c := range content {
-		key := c.suite + "/" + c.binarypkg
-		if err := markPresent(latestVersion, res.xref, c.filename, key); err != nil {
-			knownIssues[key] = append(knownIssues[key], err)
+	for _, p := range res.pkgs {
+		if len(p.manpageList) == 0 {
+			continue
+		}
+
+		key := p.suite + "/" + p.binarypkg
+		for _, f := range p.manpageList {
+			if err := markPresent(latestVersion, res.xref, strings.TrimPrefix(f, manPrefix), key); err != nil {
+				knownIssues[key] = append(knownIssues[key], err)
+			}
 		}
 	}
 

@@ -7,39 +7,24 @@ import (
 	"github.com/thkukuk/rpm2docserv/pkg/rpm"
 )
 
-type contentEntry struct {
-	suite     string
-	arch      string
-	binarypkg string
-	filename  string
-}
-
 var manPrefix = "/usr/share/man/"
 var gzSuffix = ".gz"
 
 
 // go through all RPMs, get the filelist, and store the filename of
 // all manual pages found in an RPM
-func getContents(suite string, pkgs []*pkgEntry) ([]*contentEntry, error) {
+func getContents(suite string, pkgs []*pkgEntry) (error) {
 
-	var entries []*contentEntry
 	for _, pkg := range pkgs {
 
 		filelist, err := rpm.GetRPMFilelist (pkg.filename)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for _, filename := range filelist {
 
 			if strings.HasPrefix(filename, manPrefix) && strings.HasSuffix(filename, gzSuffix){
-				entries = append(entries, &contentEntry{
-					suite:     suite,
-					arch:      pkg.arch,
-					binarypkg: pkg.binarypkg,
-					filename:  strings.TrimPrefix(filename, manPrefix),
-				})
-
 				pkg.manpageList = append(pkg.manpageList, filename)
 			}
 		}
@@ -55,13 +40,16 @@ func getContents(suite string, pkgs []*pkgEntry) ([]*contentEntry, error) {
 		}
 	}
 
-	return entries, nil
+	return nil
 }
 
-func getAllContents(suite string, pkgs []*pkgEntry) ([]*contentEntry, error) {
-	results, err := getContents(suite, pkgs)
+func getAllContents(suite string, pkgs []*pkgEntry) (error) {
+	// XXX Loop over all suites...
+
+	err := getContents(suite, pkgs)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return results, nil
+
+	return nil
 }
