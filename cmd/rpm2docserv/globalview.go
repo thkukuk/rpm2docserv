@@ -96,8 +96,6 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 	suite := "manpages"
 	res.suites[suite] = true
 	res.idxSuites[suite] = suite
-	// and a dummy component
-	component := "unknown"
 
 	latestVersion := make(map[string]*manpage.PkgMeta)
 
@@ -134,7 +132,6 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 				res.pkgs = append (res.pkgs, pkg)
 
 				latestVersion[suite + "/" + pkg.binarypkg] = &manpage.PkgMeta{
-					Component: component,
 					Filename: path,
 					Sourcepkg: pkg.source,
 					Binarypkg: pkg.binarypkg,
@@ -148,7 +145,7 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 		log.Println(err)
 	}
 
-	err = getAllContents(suite, res.pkgs)
+	err = getAllContents(res.pkgs)
 	if err != nil {
 		return res, err
 	}

@@ -13,7 +13,7 @@ var gzSuffix = ".gz"
 
 // go through all RPMs, get the filelist, and store the filename of
 // all manual pages found in an RPM
-func getContents(suite string, pkgs []*pkgEntry) (error) {
+func getAllContents(pkgs []*pkgEntry) (error) {
 
 	for _, pkg := range pkgs {
 
@@ -38,17 +38,6 @@ func getContents(suite string, pkgs []*pkgEntry) (error) {
 				return len(pkg.manpageList[i]) < len(pkg.manpageList[j])
 			})
 		}
-	}
-
-	return nil
-}
-
-func getAllContents(suite string, pkgs []*pkgEntry) (error) {
-	// XXX Loop over all suites...
-
-	err := getContents(suite, pkgs)
-	if err != nil {
-		return err
 	}
 
 	return nil
