@@ -65,7 +65,7 @@ and will be placed in -serving-dir uncompressed.
 
 * Broken manual pages are not rendered but still part of xref/auxserver
 * Handle .so redirects
-* Create index of packages containing the same manual page ("conflicting packages")
-* Try to find out to which manual page update-alternatives will point...
+* fakeroot-sysv.1.de.html: wrong encoding with docserv-minisrv
+* Duplicate RPMs: sort them so that the newest (higher version) is used
 * Document how to configure and use https
 * https://www.sitemaps.org/ - Write extra tool to create sitemaps.xml files. Since this files contain the hostname, but we want to be independ in a container, create this files on demand when starting the container
