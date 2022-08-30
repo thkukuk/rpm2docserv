@@ -17,6 +17,7 @@ import (
 
 type pkgEntry struct {
         source     string
+	sourcerpm  string
 	suite      string
         binarypkg  string
         arch       string
@@ -122,12 +123,12 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 				}
 				pkg.version = version + "-" + release;
 
-				pkg.source, err = rpm.GetSourceRPMName(path)
+				pkg.sourcerpm, err = rpm.GetSourceRPMName(path)
 				if err != nil {
 					return err
 				}
 				// We don't need the version and rest of the source RPM name
-				pkg.source, _, _, _, err = rpm.SplitRPMname(pkg.source)
+				pkg.source, _, _, _, err = rpm.SplitRPMname(pkg.sourcerpm)
 
 				res.pkgs = append (res.pkgs, pkg)
 
