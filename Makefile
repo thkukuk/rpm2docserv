@@ -23,6 +23,11 @@ tidy: ## Clean up dependencies
 vendor: dep ## Create vendor directory
 	@$(GO) mod vendor
 
+api: ## Auto-generate grpc go sources
+	@protoc -I pkg/proto/ \
+		--go_out=plugins=grpc:pkg/proto \
+		pkg/proto/index.proto
+
 bundle: ## Generate embedded files
 	$(GO) generate bundle.go
 
