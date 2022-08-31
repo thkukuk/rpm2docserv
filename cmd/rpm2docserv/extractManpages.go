@@ -45,7 +45,7 @@ var (
 	// file will be hardlinked several times and we can ignore them
 	// XXX should be part of a yaml config file...
 	// XXX define if prefix or whole string...
-	// this list must be strictly alpabetical sorted!
+	// this list must be sorted in ascending order!
 	// inn and mininews are conflicting packages build from the same source, so identical manpages
 	// python3* uses update-alternatives for the identical manual pages, only build for different python versions
 	extractErrorWhitelist = []string{"inn", "mininews", "python3"};
@@ -54,7 +54,9 @@ var (
 )
 
 func isWhitelisted(pkg string, whitelist []string) (bool) {
-	i := sort.Search(len(whitelist), func(i int) bool { return pkg <= whitelist[i] })
+
+	// shorten package list to prefix in comparisation
+	i := sort.Search(len(whitelist), func(i int) bool { return pkg[:len(whitelist[i])] <= whitelist[i] })
 
 	if i < len(whitelist) && strings.HasPrefix(pkg, whitelist[i]) {
 		return true
@@ -203,12 +205,17 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 			prefix := filepath.Dir(f)
 			prefix = filepath.Dir(prefix)
 
-			soRef := filepath.Join(prefix, section, str + ".gz")
+			soRef := filepath.Join(prefix, section, str)
+			// some .so references include .gz, others not
+			// (e.g. regulartory.db.5.gz from wireless-regdb)
+			if !strings.HasSuffix(soRef, ".gz") {
+				soRef = soRef + ".gz"
+			}
 
 			// Check that the .so reference does not point to itself
 			// See [bsc#1202943] as example
 			if f == soRef {
-				log.Printf("WARNING: %s/%s/%s points to itself!\n", prefix, section, str + ".gz")
+				log.Printf("WARNING: %q points to itself!\n", soRef)
 				return soRef, nil
 			} else {
 				return getManpageRef(soRef, tmpdir, rpmfile)
