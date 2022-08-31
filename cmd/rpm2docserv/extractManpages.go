@@ -50,13 +50,19 @@ var (
 	// python3* uses update-alternatives for the identical manual pages, only build for different python versions
 	extractErrorWhitelist = []string{"inn", "mininews", "python3"};
 	// qelectrotech ships french manual pages for different locales, we only need one
-	linkErrorWhitelist = []string{"qelectrotech"};
+	linkErrorWhitelist = []string{"qelectrotech", "wireless-tools"};
 )
 
 func isWhitelisted(pkg string, whitelist []string) (bool) {
 
 	// shorten package list to prefix in comparisation
-	i := sort.Search(len(whitelist), func(i int) bool { return pkg[:len(whitelist[i])] <= whitelist[i] })
+	i := sort.Search(len(whitelist), func(i int) bool {
+		if len(pkg) < len(whitelist[i]) {
+			return pkg <= whitelist[i]
+		} else {
+			return pkg[:len(whitelist[i])] <= whitelist[i]
+		}
+	})
 
 	if i < len(whitelist) && strings.HasPrefix(pkg, whitelist[i]) {
 		return true
@@ -184,6 +190,9 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 			str = str[:pos]
 		}
 		str = strings.TrimSuffix(str, "\n")
+
+		// remove all backslashes (e.g. createrepo\_c)
+		str = strings.Replace(str, "\\", "", -1)
 
 		// Make sure it is a .so reference
 		if strings.HasPrefix(str, ".so ") {
