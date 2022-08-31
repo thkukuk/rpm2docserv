@@ -33,10 +33,10 @@ import (
 )
 
 type manLinks struct {
-	rpmfile string
 	binarypkg string
 	source string
 	target string
+	err error
 }
 
 
@@ -123,36 +123,40 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 			// %ghost entry, most likely update-alternatives
 			dstf, err := getUpdateAlternatives(strings.TrimPrefix(f, tmpdir), rpmfile)
 			if err != nil {
-				return "", err
+				return f, err
 			}
 			return getManpageRef(filepath.Join(tmpdir, dstf), tmpdir, rpmfile)
 		} else {
-			return "", err
+			return f, err
 		}
 	}
 
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		link, _ := filepath.EvalSymlinks(f)
+		symlink, _ := filepath.EvalSymlinks(f)
 		// Check that we have no dangling symlink and it
 		// does not point outside our tmpdir
-		if len(link) > 0 && strings.HasPrefix(link, tmpdir) {
+		if len(symlink) > 0 && strings.HasPrefix(symlink, tmpdir) {
 			// could point to another link or be a .so reference
-			return getManpageRef(link, tmpdir, rpmfile)
+			return getManpageRef(symlink, tmpdir, rpmfile)
 		} else {
 			// Most likely the source file is in another RPM or update-alternatives,
-			link, err = os.Readlink(f)
+			link, err := os.Readlink(f)
 			if err != nil {
-				return "", fmt.Errorf("Error in Readlink(%q): %v", f, err)
+				return f, fmt.Errorf("Error in Readlink(%q): %v", f, err)
 			}
 
 			if strings.HasPrefix(link, "/etc/alternatives/") {
 				dstf, err := getUpdateAlternatives(strings.TrimPrefix(f, tmpdir), rpmfile)
 				if err != nil {
-					return "", err
+					return f, err
 				}
 				return getManpageRef(filepath.Join(tmpdir, dstf), tmpdir, rpmfile)
 			} else {
-				return "", fmt.Errorf("Dangling symlink: %q", f)
+				dstf := link
+				if link[:0] != "/" {
+					dstf = filepath.Join(filepath.Dir(f), link)
+				}
+				return dstf, fmt.Errorf("Dangling symlink: %q -> %q", f, dstf)
 			}
 		}
 	}
@@ -304,6 +308,8 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (er
 
 func extractManpages(cacheDir string, servingDir string, suite string, gv globalView) (error) {
 
+	var missing []*manLinks
+
 	tmpdir, err := ioutil.TempDir(servingDir, "collect-")
 	if err != nil {
 		log.Fatal(err)
@@ -341,7 +347,16 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 
 			srcf, err := getManpageRef(filepath.Join(tmpdir, p.sourcerpm, f), filepath.Join(tmpdir, p.sourcerpm), p.filename)
 			if err != nil {
-				log.Printf("Error in finding manpage (%s): %v", p.binarypkg, err)
+				if len(srcf) > 0 {
+					missing = append (missing, &manLinks{
+						binarypkg: p.binarypkg,
+						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, p.sourcerpm)),
+						target: dstf,
+						err: err,
+					})
+				} else {
+					log.Printf("Error in finding manpage (%s): %v", p.binarypkg, err)
+				}
 				continue
 			}
 
@@ -354,6 +369,32 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 
 		atomic.AddUint64(&gv.stats.PackagesExtracted, 1)
 	}
+
+	for _, s := range missing {
+                m, err :=  manpage.FromManPath(strings.TrimPrefix(s.source, manPrefix), nil)
+                if err != nil {
+                        log.Printf("Error with missing manpage (%s): src=%q, dst=%q, err=%v\n", s.binarypkg, s.source, s.target, err)
+                        continue
+                }
+
+                found := false
+                x := gv.xref[m.Name]
+                for _, y := range x {
+                        if suite == y.Package.Suite && m.Section == y.Section && m.Language == y.Language {
+                                srcf := filepath.Join(servingDir, y.ServingPath() + ".gz")
+                                err = os.Link(srcf, s.target)
+                                if err != nil {
+                                        continue
+                                }
+                                found = true
+                                break
+                        }
+                }
+                if !found {
+			log.Printf("Error in finding manpage (%s): %v", s.binarypkg, s.err)
+                        continue
+                }
+        }
 
 	return nil
 }
