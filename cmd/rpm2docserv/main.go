@@ -78,7 +78,7 @@ func logic() error {
 	stage3 := time.Now()
 
 	// Stage 3: Extract manual pages from packages and rename them
-	err = extractManpagesAll(*cacheDir, *servingDir, globalView)
+	err = extractManpagesAll(*cacheDir, *servingDir, &globalView)
 	if err != nil {
 		return fmt.Errorf("extracing manual pages: %v", err)
 	}

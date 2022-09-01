@@ -152,6 +152,8 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 				dstf, err := getUpdateAlternatives(strings.TrimPrefix(f, tmpdir), rpmfile)
 				if err != nil {
 					return f, err
+				} else if len(dstf) == 0 {
+					return f, fmt.Errorf("%q (update-alternative) not found in RPM scripts", strings.TrimPrefix(f, tmpdir))
 				}
 				return getManpageRef(filepath.Join(tmpdir, dstf), tmpdir, rpmfile)
 			} else {
@@ -246,7 +248,7 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 // We need directories per source RPM to be able to extract conflicting packages.
 // We need all manpages from all subpackages of a Source RPM since symlinks and .so
 // references are going cross packages.
-func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (error) {
+func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (error) {
 
 	for i := range gv.pkgs {
 		if gv.pkgs[i].suite != suite {
@@ -320,7 +322,7 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (er
 	return nil
 }
 
-func extractManpages(cacheDir string, servingDir string, suite string, gv globalView) (error) {
+func extractManpages(cacheDir string, servingDir string, suite string, gv *globalView) (error) {
 
 	var missing []*manLinks
 
@@ -387,7 +389,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 	for i := range missing {
                 m, err :=  manpage.FromManPath(strings.TrimPrefix(missing[i].source, manPrefix), nil)
                 if err != nil {
-			log.Printf("Error with missing manpage (%s): src=%q, dst=%q, err=%v\n", missing[i].binarypkg, missing[i].source, missing[i].target, err)
+			log.Printf("Error with missing manpage (%s): %v", missing[i].binarypkg, err)
 			continue
 		}
 
@@ -429,7 +431,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 	return nil
 }
 
-func extractManpagesAll(cacheDir string, servingDir string, gv globalView) (error) {
+func extractManpagesAll(cacheDir string, servingDir string, gv *globalView) (error) {
 	for suite := range gv.suites {
 		// Cleanup directory for suite
 		suitedir := filepath.Join(servingDir, suite)
