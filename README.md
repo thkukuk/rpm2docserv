@@ -63,9 +63,8 @@ and will be placed in -serving-dir uncompressed.
 
 ## TODO
 
+* Optimze speed when gathering RPMs
 * Broken manual pages are not rendered but still part of xref/auxserver
-* Handle .so redirects
-* fakeroot-sysv.1.de.html: wrong encoding with docserv-minisrv
 * Duplicate RPMs: sort them so that the newest (higher version) is used
 * Document how to configure and use https
 * https://www.sitemaps.org/ - Write extra tool to create sitemaps.xml files. Since this files contain the hostname, but we want to be independ in a container, create this files on demand when starting the container
