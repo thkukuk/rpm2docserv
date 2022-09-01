@@ -393,9 +393,9 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 
                 found := false
                 x := gv.xref[m.Name]
-                for _, y := range x {
-                        if suite == y.Package.Suite && m.Section == y.Section && m.Language == y.Language {
-                                srcf := filepath.Join(servingDir, y.ServingPath() + ".gz")
+                for j := range x {
+                        if suite == x[j].Package.Suite && m.Section == x[j].Section && m.Language == x[j].Language {
+                                srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
                                 err = os.Link(srcf, missing[i].target)
                                 if err != nil {
                                         continue
@@ -404,6 +404,22 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
                                 break
                         }
                 }
+
+		// second run, relax m.Section and also allow substring matches (e.g. postgresql14-docs, where the .so reference got not adjusted
+		if !found {
+			for j := range x {
+				if suite == x[j].Package.Suite && strings.HasPrefix(x[j].Section, m.Section) && m.Language == x[j].Language {
+					srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
+					err = os.Link(srcf, missing[i].target)
+					if err != nil {
+						continue
+					}
+					found = true
+					break
+				}
+			}
+		}
+		// No we really didn't found it.
                 if !found {
 			log.Printf("Error in finding manpage (%s): %v", missing[i].binarypkg, missing[i].err)
                         continue
