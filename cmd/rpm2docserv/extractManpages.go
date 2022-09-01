@@ -80,10 +80,10 @@ func getUpdateAlternatives(filename string, rpmfile string) (string, error) {
 		return "", fmt.Errorf("rpm.GetRPMScripts(%s) failed: %v\n", rpmfile, err)
 	}
 
-	for i, line := range scripts {
-		pos := strings.Index(line, filename)
+	for i := range scripts {
+		pos := strings.Index(scripts[i], filename)
 		if pos >= 0 {
-			str := line[pos+len(filename):]
+			str := scripts[i][pos+len(filename):]
 
 			// Remove all '"' around update-alternatives arguments
 			str = strings.Replace(str, "\"", "", -1)
@@ -103,14 +103,14 @@ func getUpdateAlternatives(filename string, rpmfile string) (string, error) {
 			}
 			words := strings.Fields(str)
 			if len(words) < 2 {
-				return "", errors.New("Error: cannot parse update-alternatives entry for " + filename)
+				return "", fmt.Errorf("cannot parse update-alternatives entry for %q", filename)
 			}
 
 			return words[1], nil
 		}
 	}
 
-	return "", errors.New("Error: " + filename + " not found in RPM scripts")
+	return "", nil
 }
 
 func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
@@ -124,6 +124,8 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 			dstf, err := getUpdateAlternatives(strings.TrimPrefix(f, tmpdir), rpmfile)
 			if err != nil {
 				return f, err
+			} else if len(dstf) == 0 {
+				return f, fmt.Errorf("%q not found on disk and in RPM scripts", strings.TrimPrefix(f, tmpdir))
 			}
 			return getManpageRef(filepath.Join(tmpdir, dstf), tmpdir, rpmfile)
 		} else {
@@ -133,6 +135,7 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		symlink, _ := filepath.EvalSymlinks(f)
+
 		// Check that we have no dangling symlink and it
 		// does not point outside our tmpdir
 		if len(symlink) > 0 && strings.HasPrefix(symlink, tmpdir) {
@@ -245,11 +248,11 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 // references are going cross packages.
 func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (error) {
 
-	for _, p := range gv.pkgs {
-		if p.suite != suite {
+	for i := range gv.pkgs {
+		if gv.pkgs[i].suite != suite {
 			continue
 		}
-		if len(p.manpageList) == 0 {
+		if len(gv.pkgs[i].manpageList) == 0 {
 			continue
 		}
 
@@ -261,7 +264,7 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (er
 		}
 
 		// XXX rpm packge als rpm.Unpack
-		rpm2cpio := exec.Command("rpm2cpio", p.filename)
+		rpm2cpio := exec.Command("rpm2cpio", gv.pkgs[i].filename)
 		cpio := exec.Command("cpio", "-D", unrpmDir,
 			"--extract",
 			"--unconditional",
@@ -283,8 +286,8 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (er
 			return fmt.Errorf("Error waiting for cpio: %v", err)
 		}
 
-		for _, f := range p.manpageList {
-			dstf := filepath.Join(tmpdir, p.sourcerpm, f)
+		for _, f := range gv.pkgs[i].manpageList {
+			dstf := filepath.Join(tmpdir, gv.pkgs[i].sourcerpm, f)
 
 			err = os.MkdirAll(filepath.Dir(dstf), 0755)
 			if err != nil {
@@ -292,11 +295,22 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv globalView) (er
 				return fmt.Errorf("Cannot create directoy %q: %v", filepath.Dir(dstf), err)
 			}
 
+			// In some packages (e.g. xemacs) the manual page is a symlink
+			// to a different place outside /usr/share/man
 			srcf := filepath.Join(unrpmDir, f)
+			fileInfo, err := os.Lstat(srcf)
+			if err == nil && fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+				symlink, err := filepath.EvalSymlinks(srcf)
+				// check that the manpage is in the unrpm directory
+				// and not pointing to somewhere in the build system
+				if err == nil && strings.HasPrefix(symlink, unrpmDir) {
+					srcf = symlink
+				}
+			}
 
 			err = os.Link(srcf, dstf)
-			if err != nil && !errors.Is(err, os.ErrNotExist) && !isWhitelisted(p.binarypkg, extractErrorWhitelist) {
-				log.Printf("Cannot hardlink %q (%s): %v", srcf, p.binarypkg, err)
+			if err != nil && !errors.Is(err, os.ErrNotExist) && !isWhitelisted(gv.pkgs[i].binarypkg, extractErrorWhitelist) {
+				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].binarypkg, err)
 				continue
 			}
 		}
@@ -321,22 +335,22 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 		return err
 	}
 
-	for _, p := range gv.pkgs {
-		if p.suite != suite {
+	for i := range gv.pkgs {
+		if gv.pkgs[i].suite != suite {
 			continue
 		}
-		if len(p.manpageList) == 0 {
+		if len(gv.pkgs[i].manpageList) == 0 {
 			continue
 		}
 
-		for _, f := range p.manpageList {
+		for _, f := range gv.pkgs[i].manpageList {
 			m, err :=  manpage.FromManPath(strings.TrimPrefix(f, manPrefix), nil)
 			if err != nil {
 				// not well formated manual page, already reported, ignore it
 				continue
 			}
 
-			targetdir := filepath.Join(servingDir, p.suite, p.binarypkg)
+			targetdir := filepath.Join(servingDir, gv.pkgs[i].suite, gv.pkgs[i].binarypkg)
 
 			err = os.MkdirAll(targetdir, 0755)
 			if err != nil {
@@ -345,24 +359,24 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 
 			dstf := filepath.Join(targetdir, m.Name + "." + m.Section + "." + m.Language + ".gz")
 
-			srcf, err := getManpageRef(filepath.Join(tmpdir, p.sourcerpm, f), filepath.Join(tmpdir, p.sourcerpm), p.filename)
+			srcf, err := getManpageRef(filepath.Join(tmpdir, gv.pkgs[i].sourcerpm, f), filepath.Join(tmpdir, gv.pkgs[i].sourcerpm), gv.pkgs[i].filename)
 			if err != nil {
 				if len(srcf) > 0 {
 					missing = append (missing, &manLinks{
-						binarypkg: p.binarypkg,
-						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, p.sourcerpm)),
+						binarypkg: gv.pkgs[i].binarypkg,
+						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, gv.pkgs[i].sourcerpm)),
 						target: dstf,
 						err: err,
 					})
 				} else {
-					log.Printf("Error in finding manpage (%s): %v", p.binarypkg, err)
+					log.Printf("Error in finding manpage (%s): %v", gv.pkgs[i].binarypkg, err)
 				}
 				continue
 			}
 
 			err = os.Link(srcf, dstf)
-			if err != nil && !isWhitelisted(p.binarypkg, linkErrorWhitelist){
-				log.Printf("Cannot hardlink %q (%s): %v", srcf, p.binarypkg, err)
+			if err != nil && !isWhitelisted(gv.pkgs[i].binarypkg, linkErrorWhitelist){
+				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].binarypkg, err)
 				continue
 			}
 		}
@@ -370,19 +384,19 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
 		atomic.AddUint64(&gv.stats.PackagesExtracted, 1)
 	}
 
-	for _, s := range missing {
-                m, err :=  manpage.FromManPath(strings.TrimPrefix(s.source, manPrefix), nil)
+	for i := range missing {
+                m, err :=  manpage.FromManPath(strings.TrimPrefix(missing[i].source, manPrefix), nil)
                 if err != nil {
-                        log.Printf("Error with missing manpage (%s): src=%q, dst=%q, err=%v\n", s.binarypkg, s.source, s.target, err)
-                        continue
-                }
+			log.Printf("Error with missing manpage (%s): src=%q, dst=%q, err=%v\n", missing[i].binarypkg, missing[i].source, missing[i].target, err)
+			continue
+		}
 
                 found := false
                 x := gv.xref[m.Name]
                 for _, y := range x {
                         if suite == y.Package.Suite && m.Section == y.Section && m.Language == y.Language {
                                 srcf := filepath.Join(servingDir, y.ServingPath() + ".gz")
-                                err = os.Link(srcf, s.target)
+                                err = os.Link(srcf, missing[i].target)
                                 if err != nil {
                                         continue
                                 }
@@ -391,7 +405,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv global
                         }
                 }
                 if !found {
-			log.Printf("Error in finding manpage (%s): %v", s.binarypkg, s.err)
+			log.Printf("Error in finding manpage (%s): %v", missing[i].binarypkg, missing[i].err)
                         continue
                 }
         }
