@@ -1,0 +1,20 @@
+[Unit]
+Description=Docserv auxiliary service endpoints
+Documentation=https://github.com/thkukuk/rpm2docserv
+After=local-fs.target
+
+[Service]
+User=docserv-aux
+Group=docserv-aux
+EnvironmentFile=-/usr/etc/default/docserv-auxserver
+EnvironmentFile=-/etc/default/docserv-auxserver
+ExecStart=/usr/sbin/docserv-auxserver $AUXSERVER_LISTEN $AUXSERVER_INDEX
+# Provide a separate /tmp to the process.
+PrivateTmp=true
+# Provide all system files read-only to the process.
+ProtectSystem=strict
+Restart=on-failure
+
+
+[Install]
+WantedBy=multi-user.target

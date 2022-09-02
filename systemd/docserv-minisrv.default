@@ -1,0 +1,5 @@
+# host:port on which to serve documentation
+#MINISERV_LISTEN="-listen localhost:8089"
+
+# Directory from which the documentation should be served
+#SERVING_DIR="-serving-dir /srv/docserv"

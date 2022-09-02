@@ -1,0 +1,20 @@
+[Unit]
+Description=Simple Docserv web server
+Documentation=https://github.com/thkukuk/rpm2docserv
+After=local-fs.target
+
+[Service]
+User=docserv-srv
+Group=docserv-srv
+EnvironmentFile=-/usr/etc/default/docserv-minisrv
+EnvironmentFile=-/etc/default/docserv-miniserv
+ExecStart=/usr/sbin/docserv-minisrv $MINISERV_LISTEN $SERVING_DIR
+# Provide a separate /tmp to the process.
+PrivateTmp=true
+# Provide all system files read-only to the process.
+ProtectSystem=strict
+Restart=on-failure
+
+
+[Install]
+WantedBy=multi-user.target
