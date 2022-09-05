@@ -68,6 +68,9 @@ func MustParseCommonTmpls() *template.Template {
 		"HasPrefix": func(s, suffix string) bool {
 			return strings.HasPrefix(s, suffix)
 		},
+		"TrimPrefix": func(s, suffix string) string {
+			return strings.TrimPrefix(s, suffix)
+		},
 		"BaseURLPath": func() string {
 			return BaseURLPath()
 		},

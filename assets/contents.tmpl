@@ -1,16 +1,47 @@
 {{ template "header" . }}
 
+<div class="panels" id="panels">
+<div class="panel" role="complementary">
+<div class="panel-heading" role="heading">
+links
+</div>
+<div class="panel-body">
+<ul class="list-group list-group-flush">
+<li class="list-group-item">
+<a href="#binarypkg" target="_parent">Manpages by binary package</a>
+</li>
+<li class="list-group-item">
+<a href="#sourcepkg" target="_parent">Manpages by source package</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
 <div class="maincontents">
 
-<h1>Binary packages containing manpages</h1>
+<section id="binarypkg">
+<h1>Manpages by binary package</h1>
 
 <ul>
 {{ range $idx, $dir := .Bins }}
-{{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) }}
+{{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) (not (HasPrefix $dir "src:")) }}
   <li><a href="{{ BaseURLPath }}/{{ $.Suite }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
 {{ end }}
 {{ end }}
 </ul>
+</section>
+<section id="sourcepkg">
+<h1>Manpages by source package</h1>
+
+<ul>
+{{ range $idx, $dir := .Bins }}
+{{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) (HasPrefix $dir "src:") }}
+  <li><a href="{{ BaseURLPath }}/{{ $.Suite }}/{{ $dir}}/index.html">{{ TrimPrefix $dir "src:"}}</a></li>
+{{ end }}
+{{ end }}
+</ul>
+</section>
 
 </div>
 

@@ -31,7 +31,7 @@ func renderContents(dest, suite string, bins []string) error {
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 		}{
-			Title:          fmt.Sprintf("Contents"),
+			Title:          fmt.Sprintf("Manpages of %s", suite),
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/%s/index.html", suite), suite},
