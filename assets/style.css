@@ -1,41 +1,48 @@
 body {
-	color: #000;
-	background-color: white;
-	font-family: "Source Sans Pro", sans-serif;
-	font-size: 100%;
-	line-height: 1.2;
-	letter-spacing: 0.15px;
-	margin: 0;
-	padding: 0;
+    color: #000;
+    background-color: white;
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 100%;
+    line-height: 1.2;
+    letter-spacing: 0.15px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: overlay;
+}
+
+aside {
+    background-color: #173f4f;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    left: 0;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #header {
-	padding: 0 10px 0 52px;
+    display: flex;
+    flex-direction: row;
 }
 
 #logo {
-	position: absolute;
-	top: 0;
-	left: 0;
-	border-left: 1px solid transparent;
-	border-right: 1px solid transparent;
-	border-bottom: 1px solid transparent;
-	width: 70px;
-	height: 5.07em;
-	min-height: 70px;
+    display: inline-block;
+    width: 100%;
 }
 
-#logo a {
-	display: block;
-	height: 100%;
-}
-
-#logo img {
-	margin-top: 5px;
-	position: absolute;
-	bottom: 0.3em;
-	overflow: auto;
-	border: 0;
+#navgroup {
+    padding: 0.5rem;
 }
 
 #header h1 {
@@ -43,103 +50,89 @@ body {
     margin: 0;
 }
 
-p.section {
-	margin: 0;
-	padding: 0 5px 0 5px;
-	font-family: monospace;
-	font-size: 13px;
-	line-height: 16px;
-	color: white;
-	letter-spacing: 0.08em;
-	position: absolute;
-	top: 0px;
-	left: 52px;
-	background-color: #c70036;
+#logo img {
+    margin: 0 0.5rem;
+}
+
+#logo .title {
+    padding: 0.25rem 0;
+    text-align: center;
+    color: white;
+    background-color: #73ba25;
+}
+
+#logo .image {
+    text-align: center;
 }
 
 p.section a {
-	color: white;
-	text-decoration: none;
+    color: white;
+    text-decoration: none;
 }
 
 .hidecss {
-	display: none;
+    display: none;
 }
 
 #searchbox {
-	text-align:left;
-	line-height: 1;
-	margin: 0 10px 0 0.5em;
-	padding: 1px 0 1px 0;
-	position: absolute;
-	top: 0;
-	right: 0;
-	font-size: .75em;
+    margin: 1rem 0;
 }
 
-#navbar {
-	border-bottom: 1px solid #c70036;
+#searchbox input[type=submit] {
+    color: #ffffff;
+    background-color: #73ba25;
+    border: none;
+    padding: 0.25rem 0.5rem;
+}
+
+#searchbox input {
+    border: 1px solid #516f7b;
+    padding: 0.2rem;
+    outline: none;
+    font: inherit;
+    font-size: 0.8rem;
 }
 
 #navbar ul {
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-}
-
-#navbar li {
-	list-style: none;
-	float: left;
+    margin: 0 0 0 0.25rem;
+    padding: 0;
+    list-style: none;
 }
 
 #navbar a {
-        display: block;
-        padding: 1.75em .5em .25em .5em;
-	color: #0035c7;
-	text-decoration: none;
-	border-left: 1px solid transparent;
-	border-right: 1px solid transparent;
+    color: #ffffff;
 }
 
-#navbar a:hover
-, #navbar a:visited:hover {
-        background-color: #f5f6f7;
-	border-left: 1px solid  #d2d3d7;
-	border-right: 1px solid #d2d3d7;
-	text-decoration: underline;
-	text-decoration: underline;
+#navbar a:hover {
+    text-decoration: underline;
 }
 
 a:link {
-	color: #0035c7;
+    color: #173f4f;
 }
 
 a:visited {
-	color: #54638c;
+    color: #54638c;
 }
 
 #breadcrumbs {
-	line-height: 2;
-	min-height: 20px;
-	margin: 0;
-	padding: 0;
-	font-size: 0.75em;
-	border-bottom: 1px solid #d2d3d7;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #73ba25;
 }
 
-#breadcrumbs:before {
-	margin-left: 0.5em;
-	margin-right: 0.5em;
+#breadcrumbs .nav {
+    margin: 0 0.5rem;
 }
 
 #content {
-    margin: 0 10px 0 52px;
+    margin: 0 1rem;
     display: flex;
     flex-direction: row;
+    flex-grow: 1;
 }
 
 .paneljump {
-    background-color: #d70751;
+    background-color: #73ba25;
     padding: 0.5em;
     border-radius: 3px;
     margin-right: .5em;
@@ -155,11 +148,11 @@ a:visited {
 
 @media all and (max-width: 800px) {
     #content {
-	flex-direction: column;
-	margin: 0.5em;
+        flex-direction: column;
+        margin: 0.5em;
     }
     .paneljump {
-	display: block;
+        display: block;
     }
 }
 
@@ -175,24 +168,24 @@ a:visited {
 }
 
 #footer {
-	border: 1px solid #dfdfe0;
-	border-left: 0;
-	border-right: 0;
-	background-color: #f5f6f7;
-	padding: 1em;
-	margin: 1em 10px 0 52px;
-	font-size: 0.75em;
-	line-height: 1.5em;
+    border: 1px solid #dfdfe0;
+    border-left: 0;
+    border-right: 0;
+    background-color: #f5f6f7;
+    padding: 1em;
+    margin: 1em 0 0 0;
+    font-size: 0.75em;
+    line-height: 1.5em;
 }
 
 hr {
-	border-top: 1px solid #d2d3d7;
-	border-bottom: 1px solid white;
-	border-left: 0;
-	border-right: 0;
-	margin: 1.4375em 0 1.5em 0;
-	height: 0;
-	background-color: #bbb;
+    border-top: 1px solid #d2d3d7;
+    border-bottom: 1px solid white;
+    border-left: 0;
+    border-right: 0;
+    margin: 1.4375em 0 1.5em 0;
+    height: 0;
+    background-color: #bbb;
 }
 
 #content p {
@@ -217,7 +210,7 @@ a, a:hover, a:focus, a:visited {
 
 .panel-heading, .panel details {
   margin: -15px -15px 0px;
-  background-color: #d70751;
+  background-color: #73ba25;
   border-bottom: 1px solid #dddddd;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
@@ -465,13 +458,13 @@ h2 {
 
 @media print {
     #header, #footer, .panel, .anchor, .paneljump {
-	display: none;
+        display: none;
     }
     #content {
-	margin: 0;
+        margin: 0;
     }
     .mandoc {
-	margin: 0;
+        margin: 0;
     }
 }
 
@@ -479,170 +472,170 @@ h2 {
 /* Displays and lists. */
 
 .Bd { }
-.Bd-indent {	margin-left: 3.8em; }
+.Bd-indent {    margin-left: 3.8em; }
 
-.Bl-bullet {	list-style-type: disc;
-		padding-left: 1em; }
+.Bl-bullet {    list-style-type: disc;
+        padding-left: 1em; }
 .Bl-bullet > li { }
-.Bl-dash {	list-style-type: none;
-		padding-left: 0em; }
+.Bl-dash {  list-style-type: none;
+        padding-left: 0em; }
 .Bl-dash > li:before {
-		content: "\2014  "; }
-.Bl-item {	list-style-type: none;
-		padding-left: 0em; }
+        content: "\2014  "; }
+.Bl-item {  list-style-type: none;
+        padding-left: 0em; }
 .Bl-item > li { }
 .Bl-compact > li {
-		margin-top: 0em; }
+        margin-top: 0em; }
 
-.Bl-enum {	padding-left: 2em; }
+.Bl-enum {  padding-left: 2em; }
 .Bl-enum > li { }
 .Bl-compact > li {
-		margin-top: 0em; }
+        margin-top: 0em; }
 
 .Bl-diag { }
 .Bl-diag > dt {
-		font-style: normal;
-		font-weight: bold; }
+        font-style: normal;
+        font-weight: bold; }
 .Bl-diag > dd {
-		margin-left: 0em; }
+        margin-left: 0em; }
 .Bl-hang { }
 .Bl-hang > dt { }
 .Bl-hang > dd {
-		margin-left: 5.5em; }
+        margin-left: 5.5em; }
 .Bl-inset { }
 .Bl-inset > dt { }
 .Bl-inset > dd {
-		margin-left: 0em; }
+        margin-left: 0em; }
 .Bl-ohang { }
 .Bl-ohang > dt { }
 .Bl-ohang > dd {
-		margin-left: 0em; }
-.Bl-tag {	margin-left: 5.5em; }
+        margin-left: 0em; }
+.Bl-tag {   margin-left: 5.5em; }
 .Bl-tag > dt {
-		float: left;
-		margin-top: 0em;
-		margin-left: -5.5em;
-		padding-right: 1.2em;
-		vertical-align: top; }
+        float: left;
+        margin-top: 0em;
+        margin-left: -5.5em;
+        padding-right: 1.2em;
+        vertical-align: top; }
 .Bl-tag > dd {
-		clear: both;
-		width: 100%;
-		margin-top: 0em;
-		margin-left: 0em;
-		vertical-align: top;
-		overflow: auto; }
+        clear: both;
+        width: 100%;
+        margin-top: 0em;
+        margin-left: 0em;
+        vertical-align: top;
+        overflow: auto; }
 .Bl-compact > dt {
-		margin-top: 0em; }
+        margin-top: 0em; }
 
 .Bl-column { }
 .Bl-column > tbody > tr { }
 .Bl-column > tbody > tr > td {
-		margin-top: 1em; }
+        margin-top: 1em; }
 .Bl-compact > tbody > tr > td {
-		margin-top: 0em; }
+        margin-top: 0em; }
 
-.Rs {		font-style: normal;
-		font-weight: normal; }
+.Rs {       font-style: normal;
+        font-weight: normal; }
 .RsA { }
-.RsB {		font-style: italic;
-		font-weight: normal; }
+.RsB {      font-style: italic;
+        font-weight: normal; }
 .RsC { }
 .RsD { }
-.RsI {		font-style: italic;
-		font-weight: normal; }
-.RsJ {		font-style: italic;
-		font-weight: normal; }
+.RsI {      font-style: italic;
+        font-weight: normal; }
+.RsJ {      font-style: italic;
+        font-weight: normal; }
 .RsN { }
 .RsO { }
 .RsP { }
 .RsQ { }
 .RsR { }
-.RsT {		text-decoration: underline; }
+.RsT {      text-decoration: underline; }
 .RsU { }
 .RsV { }
 
 .eqn { }
 .tbl { }
 
-.HP {		margin-left: 3.8em;
-		text-indent: -3.8em; }
+.HP {       margin-left: 3.8em;
+        text-indent: -3.8em; }
 
 /* Semantic markup for command line utilities. */
 
 table.Nm { }
-code.Nm {	font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Fl {		font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Cm {		font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Ar {		font-style: italic;
-		font-weight: normal; }
-.Op {		display: inline; }
-.Ic {		font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Ev {		font-style: normal;
-		font-weight: normal;
-		font-family: monospace; }
-.Pa {		font-style: italic;
-		font-weight: normal; }
+code.Nm {   font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Fl {       font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Cm {       font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Ar {       font-style: italic;
+        font-weight: normal; }
+.Op {       display: inline; }
+.Ic {       font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Ev {       font-style: normal;
+        font-weight: normal;
+        font-family: monospace; }
+.Pa {       font-style: italic;
+        font-weight: normal; }
 
 /* Semantic markup for function libraries. */
 
 .Lb { }
-code.In {	font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
+code.In {   font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
 a.In { }
-.Fd {		font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Ft {		font-style: italic;
-		font-weight: normal; }
-.Fn {		font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Fa {		font-style: italic;
-		font-weight: normal; }
-.Vt {		font-style: italic;
-		font-weight: normal; }
-.Va {		font-style: italic;
-		font-weight: normal; }
-.Dv {		font-style: normal;
-		font-weight: normal;
-		font-family: monospace; }
-.Er {		font-style: normal;
-		font-weight: normal;
-		font-family: monospace; }
+.Fd {       font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Ft {       font-style: italic;
+        font-weight: normal; }
+.Fn {       font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Fa {       font-style: italic;
+        font-weight: normal; }
+.Vt {       font-style: italic;
+        font-weight: normal; }
+.Va {       font-style: italic;
+        font-weight: normal; }
+.Dv {       font-style: normal;
+        font-weight: normal;
+        font-family: monospace; }
+.Er {       font-style: normal;
+        font-weight: normal;
+        font-family: monospace; }
 
 /* Various semantic markup. */
 
 .An { }
 .Lk { }
 .Mt { }
-.Cd {		font-style: normal;
-		font-weight: bold;
-		font-family: inherit; }
-.Ad {		font-style: italic;
-		font-weight: normal; }
-.Ms {		font-style: normal;
-		font-weight: bold; }
+.Cd {       font-style: normal;
+        font-weight: bold;
+        font-family: inherit; }
+.Ad {       font-style: italic;
+        font-weight: normal; }
+.Ms {       font-style: normal;
+        font-weight: bold; }
 .St { }
 .Ux { }
 
 /* Physical markup. */
 
-.Bf {		display: inline; }
-.No {		font-style: normal;
-		font-weight: normal; }
-.Em {		font-style: italic;
-		font-weight: normal; }
-.Sy {		font-style: normal;
-		font-weight: bold; }
-.Li {		font-style: normal;
-		font-weight: normal;
-		font-family: monospace; }
+.Bf {       display: inline; }
+.No {       font-style: normal;
+        font-weight: normal; }
+.Em {       font-style: italic;
+        font-weight: normal; }
+.Sy {       font-style: normal;
+        font-weight: bold; }
+.Li {       font-style: normal;
+        font-weight: normal;
+        font-family: monospace; }

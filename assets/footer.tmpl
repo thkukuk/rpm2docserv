@@ -1,12 +1,16 @@
-</div>
-<div id="footer">
-{{ if ne .FooterExtra "" }}
-<p>{{ .FooterExtra }}</p>
-{{ else }}
-<p>Page last updated {{ Now }}</p>
-{{ end }}
-<hr>
-<div id="fineprint">
-<p>rpm2docserv {{ .Rpm2docservVersion }}, see <a href="https://github.com/thkukuk/rpm2docserv/">github.com/thkukuk/rpm2docserv</a></p>
-</div>
-</div>
+    </div>
+
+    <footer id="footer">
+      {{ if ne .FooterExtra "" }}
+      <p>{{ .FooterExtra }}</p>
+      {{ else }}
+      <p>Page last updated {{ Now }}</p>
+      {{ end }}
+      <hr>
+      <div id="fineprint">
+        <p>rpm2docserv {{ .Rpm2docservVersion }}, see <a href="https://github.com/thkukuk/rpm2docserv/">github.com/thkukuk/rpm2docserv</a></p>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

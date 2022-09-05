@@ -5,55 +5,76 @@
 <html lang="en">
 {{ end -}}
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ .Title }}</title>
-<style type="text/css">
-{{ template "style" }}
-</style>
-{{ if and (.HrefLangs) (gt (len .HrefLangs) 1) -}}
-{{ range $idx, $man := .HrefLangs -}}
-<link rel="alternate" href="/{{ $man.ServingPath }}.html" hreflang="{{ $man.LanguageTag }}">
-{{ end -}}
-{{ end -}}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{{ .Title }}</title>
+
+  <style type="text/css">
+  {{ template "style" }}
+  </style>
+
+  {{ if and (.HrefLangs) (gt (len .HrefLangs) 1) -}}
+  {{ range $idx, $man := .HrefLangs -}}
+  <link rel="alternate" href="/{{ $man.ServingPath }}.html" hreflang="{{ $man.LanguageTag }}">
+  {{ end -}}
+  {{ end -}}
 </head>
 <body>
-<div id="header">
-  <div id="upperheader">
+  <aside>
     <div id="logo">
-      <a href="https://microos.opensuse.org/" title="openSUSE MicroOS
-      Home"><img src="https://microos.opensuse.org/assets/images/microos-logo.svg"
-      alt="MicroOS" width="70" height="70"></a>
-  </div>
-    <p class="section">MANPAGES</p>
-  <div id="searchbox">
-    <form action="{{ BaseURLPath }}/jump" method="get">
-      {{ if .Meta -}}
-      <input type="hidden" name="suite" value="{{ .Meta.Package.Suite }}">
-      <input type="hidden" name="binarypkg" value="{{ .Meta.Package.Binarypkg }}">
-      <input type="hidden" name="section" value="{{ .Meta.Section }}">
-      <input type="hidden" name="language" value="{{ .Meta.Language }}">
-      {{ end -}}
-      <input type="text" name="q" placeholder="manpage name" required>
-      <input type="submit" value="Jump">
-    </form>
-  </div>
- </div>
-<div id="navbar">
-<p class="hidecss"><a href="#content">Skip Quicknav</a></p>
-<ul>
-  <li><a href="{{ BaseURLPath }}/">Index</a></li>
-  <li><a href="/about.html">About Manpages</a></li>
-</ul>
-</div>
-   <p id="breadcrumbs">&nbsp;
-     {{- range $i, $b := .Breadcrumbs }}
-     {{ if eq $b.Link "" }}
-     &#x2F; {{ $b.Text }}
-     {{ else }}
-     &#x2F; <a href="{{ BaseURLPath }}{{ $b.Link }}">{{ $b.Text }}</a>
-     {{ end }}
-     {{ end -}}
-   </p>
-</div>
-<div id="content">
+      <div class="title">
+        <span>MANPAGES</span>
+      </div>
+      <div class="image">
+        <a href="/">
+          <img src="https://microos.opensuse.org/assets/images/microos-logo.svg" alt="MicroOS" width="70" height="70">
+        </a>
+      </div>
+    </div>
+
+    <div id="navgroup">
+      <nav id="navbar">
+        <p class="hidecss"><a href="#content">Skip Quicknav</a></p>
+        <ul>
+          <li>
+            <a href="{{ BaseURLPath }}/">Index</a>
+          </li>
+          <li>
+            <a href="/about.html">About Manpages</a>
+          </li>
+          <li>
+            <a href="https://microos.opensuse.org/">openSUSE MicroOS</a>
+          </li>
+        </ul>
+      </nav>
+
+      <div id="searchbox">
+        <form action="{{ BaseURLPath }}/jump" method="get">
+          {{ if .Meta -}}
+          <input type="hidden" name="suite" value="{{ .Meta.Package.Suite }}">
+          <input type="hidden" name="binarypkg" value="{{ .Meta.Package.Binarypkg }}">
+          <input type="hidden" name="section" value="{{ .Meta.Section }}">
+          <input type="hidden" name="language" value="{{ .Meta.Language }}">
+          {{ end -}}
+          <input type="text" name="q" placeholder="manpage name" required>
+          <input type="submit" value="Jump">
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div id="breadcrumbs">
+      <div class="nav">
+        {{- range $i, $b := .Breadcrumbs }}
+        {{ if eq $b.Link "" }}
+        &#x2F; {{ $b.Text }}
+        {{ else }}
+        &#x2F; <a href="{{ BaseURLPath }}{{ $b.Link }}">{{ $b.Text }}</a>
+        {{ end }}
+        {{ end -}}
+      </div>
+    </div>
+
+    <div id="content">
