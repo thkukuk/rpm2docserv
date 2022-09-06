@@ -1,9 +1,9 @@
 FROM opensuse/tumbleweed AS build-stage
 WORKDIR /src
-RUN zypper clean && zypper ref && zypper --non-interactive install --no-recommends mandoc go make git findutils cpio
+RUN zypper clean && zypper ref -f && zypper --non-interactive install --no-recommends mandoc go make git cpio
 RUN mkdir -p rpm2docserv
 COPY . rpm2docserv/
-RUN cd rpm2docserv && make
+RUN cd rpm2docserv && make VERSION=$(git show -s --format=%cd.%h --date=format:%Y%m%d)
 RUN mkdir -p /srv/docserv && rpm2docserv/bin/rpm2docserv
 
 FROM registry.opensuse.org/opensuse/nginx:latest
