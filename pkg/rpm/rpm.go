@@ -71,7 +71,7 @@ func SplitRPMname2(rpm string, fullpath string) (name string, version string, re
         var stderr bytes.Buffer
 
 	name, version, release, arch, err = SplitRPMname(rpm)
-	if err != nil {
+	if err == nil {
 		return name, version, release, arch, nil
 	}
 
