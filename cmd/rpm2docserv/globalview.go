@@ -116,7 +116,7 @@ func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
 
 				var version, release string
 				rpmname := filepath.Base(path)
-				pkg.binarypkg, version, release, pkg.arch, err = rpm.SplitRPMname(rpmname)
+				pkg.binarypkg, version, release, pkg.arch, err = rpm.SplitRPMname2(rpmname, path)
 				if err != nil {
 					log.Printf("Ignoring %q: %v\n", rpmname, err)
 					return nil
