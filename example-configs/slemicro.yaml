@@ -1,0 +1,15 @@
+title: SLE Micro Documentation Server
+servingdir: /extern/sle-micro/docserv
+products:
+  - name: SLE Micro 5.1
+    cache:
+      - /extern/sle-micro/SLE-Micro-5.1
+  - name: SLE Micro 5.2
+    cache: 
+      - /extern/sle-micro/SLE-Micro-5.2
+  - name: SLE Micro 5.3
+    cache:
+      - /extern/sle-micro/SLE-Micro-5.3
+sortorder:
+  - SLE Micro 5.3
+  - SLE Micro 5.2

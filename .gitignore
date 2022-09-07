@@ -1,6 +1,8 @@
 *~
 bin/rpm2docserv
 bin/docserv-auxserver
+bin/docserv-minisrv
+bin
 RPMs
 docserv
 rpm2docserv-*.tar.xz

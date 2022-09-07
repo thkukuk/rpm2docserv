@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"path/filepath"
@@ -33,7 +32,14 @@ func (p bySuiteStr) Less(i, j int) bool {
 	orderi, oki := sortOrder[p[i]]
 	orderj, okj := sortOrder[p[j]]
 	if !oki || !okj {
-		panic(fmt.Sprintf("either %q or %q is an unknown suite. known: %+v", p[i], p[j], sortOrder))
+		// if we have know a suite, prefer that over the unknown one
+		if oki && !okj {
+			return true
+		}
+		if okj && !oki {
+			return false
+		}
+		return p[i] < p[j]
 	}
 	return orderi < orderj
 }
@@ -56,8 +62,8 @@ func renderAux(destDir string, gv globalView) error {
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 		}{
-			Title:          "index",
-			Suites:         []string{"manpages"},
+			Title:          *indexTitle,
+			Suites:         suites,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
 	}); err != nil {

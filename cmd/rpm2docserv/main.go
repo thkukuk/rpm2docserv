@@ -4,16 +4,34 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
         "github.com/thkukuk/rpm2docserv/pkg/bundled"
         "github.com/thkukuk/rpm2docserv/pkg/commontmpl"
 	"github.com/thkukuk/rpm2docserv/pkg/write"
 )
+
+type Suites struct {
+	Name     string   `yaml:"name"`
+	Cache    []string `yaml:"cache,omitempty"`
+	Packages []string `yaml:"packages,omitempty"`
+}
+
+type Config struct {
+	Title      string `yaml:"title"`
+	ServingDir string `yaml:"servingdir"`
+	IndexPath  string `yaml:"auxindex"`
+	Download   string `yaml:"download"`
+	Products   []Suites `yaml:"products"`
+	SortOrder  []string `yaml:"sortorder"`
+}
 
 var (
 	servingDir = flag.String("serving-dir",
@@ -31,6 +49,10 @@ var (
 	cacheDir = flag.String("cache",
 		"/var/cache/rpm2docserv",
 		"Directory in which the downloaded RPMs will be temporary stored")
+
+	yamlConfig = flag.String("config",
+		"",
+		"Configuration file in yaml format")
 
 	forceRerender = flag.Bool("force_rerender",
 		true,
@@ -52,6 +74,12 @@ var (
 	showVersion = flag.Bool("version",
 		false,
 		"Show rpm2docserv version and exit")
+
+	indexTitle = flag.String("index-title",
+		"Documentation Server",
+		"Title for the main index page")
+
+	suites []Suites
 )
 
 // use go build -ldflags "-X main.rpm2docservVersion=<version>" to set the version
@@ -61,18 +89,23 @@ func logic() error {
 	start := time.Now()
 
 	// Stage 1: Download specified packages and their dependencies
+	// we don't do this if we have more than one cache directory.
 	if !*noDownload {
-		log.Printf("Downloading RPMs...\n");
-		err := zypperDownload(strings.Split(*pkg2Render, ","), *cacheDir, start)
-		if err != nil {
-			return fmt.Errorf("downloading packages: %v", err)
+		if len(suites) == 1 && len(suites[0].Cache) == 1 {
+			log.Printf("Downloading RPMs...\n");
+			err := zypperDownload(suites[0].Packages, suites[0].Cache[0], start)
+			if err != nil {
+				return fmt.Errorf("downloading packages: %v", err)
+			}
+		} else {
+			log.Printf("Downloading RPMs... - skipped, more than one suite or cache directory specified")
 		}
 	}
 	stage2 := time.Now()
 
 	/* Stage 2: build globalView.pkgs by reading from disk */
 	log.Printf("Gathering all packages...\n");
-	globalView, err := buildGlobalView (*cacheDir, start)
+	globalView, err := buildGlobalView (suites, start)
 	log.Printf("Gathered all packages, total %d packages", len(globalView.pkgs))
 
 	stage3 := time.Now()
@@ -132,16 +165,71 @@ func logic() error {
 	return nil
 }
 
+func read_yaml_config(conffile string) (Config, error) {
+
+	var config Config
+
+	file, err := ioutil.ReadFile(conffile)
+	if err != nil {
+		return config, fmt.Errorf("Cannot read %q: %v", conffile, err)
+	}
+	err = yaml.Unmarshal(file, &config)
+	if err != nil {
+		return config, fmt.Errorf("Unmarshal error: %v", err)
+	}
+
+	return config, nil
+}
+
 func main() {
-	flag.Parse()
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	flag.Parse()
 
 	if *showVersion || *verbose {
 		fmt.Printf("rpm2docserv %s\n", rpm2docservVersion)
 		if !*verbose {
 			return
 		}
+	}
+
+	if len(*yamlConfig) > 0 {
+		config, err := read_yaml_config(*yamlConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(config.Title) > 0 {
+			indexTitle = &config.Title
+		}
+		if len(config.ServingDir) > 0 {
+			servingDir = &config.ServingDir
+		}
+		if len(config.IndexPath) > 0 {
+			indexPath = &config.IndexPath
+		}
+		if len(config.Download) > 0 {
+			if strings.EqualFold(config.Download, "false") {
+				*noDownload = true
+			} else if strings.EqualFold(config.Download, "true") {
+				*noDownload = false
+			} else {
+				log.Fatal("Invalid value %q for option \"download\" in config %q",
+					config.Download, yamlConfig)
+			}
+		}
+		if len(config.SortOrder) > 0 {
+			for idx, r := range config.SortOrder {
+				sortOrder[r] = idx
+			}
+		}
+
+		suites = config.Products
+	} else {
+		suites = make([]Suites, 1)
+		suites[0].Name = "manpages"
+		suites[0].Cache = append(suites[0].Cache, *cacheDir)
+		suites[0].Packages = strings.Split(*pkg2Render, ",")
 	}
 
 	if *injectAssets != "" {
@@ -160,14 +248,8 @@ func main() {
 		manpagefooterextraTmpl = mustParseManpagefooterextraTmpl()
 	}
 
-	// All of our .so references are relative to *servingDir. For
-	// mandoc(1) to find the files, we need to change the working
-	// directory now. But first make sure it exists.
+	// make sure the serving directory exists
 	if err := os.MkdirAll(*servingDir, os.ModePerm); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := os.Chdir(*servingDir); err != nil {
 		log.Fatal(err)
 	}
 

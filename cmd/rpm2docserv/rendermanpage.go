@@ -219,7 +219,14 @@ func (p bySuite) Less(i, j int) bool {
 	orderi, oki := sortOrder[p[i].Package.Suite]
 	orderj, okj := sortOrder[p[j].Package.Suite]
 	if !oki || !okj {
-		panic(fmt.Sprintf("either %q or %q is an unknown suite. known: %+v", p[i].Package.Suite, p[j].Package.Suite, sortOrder))
+		// if we have know a suite, prefer that over the unknown one
+		if oki && !okj {
+			return true
+		}
+		if okj && !oki {
+			return false
+		}
+		return p[i].Package.Suite < p[j].Package.Suite
 	}
 	return orderi < orderj
 }

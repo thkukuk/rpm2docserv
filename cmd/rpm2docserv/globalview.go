@@ -1,12 +1,9 @@
 package main
 
 import (
-	// "compress/gzip"
-	// "encoding/json"
 	"fmt"
-	// "io/ioutil"
 	"log"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"strings"
 	"time"
@@ -83,70 +80,76 @@ func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*m
 }
 
 // go through the cache directory, find all RPMs and build a pkg entry for it
-func buildGlobalView(cacheDir string, start time.Time) (globalView, error) {
+func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 	var stats stats
 	res := globalView{
-		suites:        make(map[string]bool, 1),
-		idxSuites:     make(map[string]string, 1),
+		suites:        make(map[string]bool, len(suites)),
+		idxSuites:     make(map[string]string, len(suites)),
 		xref:          make(map[string][]*manpage.Meta),
 		stats:         &stats,
 		start:         start,
 	}
 
-	// we currently have only a "dummy" suite, manpages
-	suite := "manpages"
-	res.suites[suite] = true
-	res.idxSuites[suite] = suite
-
 	latestVersion := make(map[string]*manpage.PkgMeta)
 
-	// Walk recursivly through the full cache directory, search all
-	// RPMs and store the meta data for them.
-	err := filepath.Walk(cacheDir,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if strings.HasSuffix(path, ".rpm") {
-				// Add RPM to package list
-				pkg := new(pkgEntry)
-				// We don't have "suites" yet
-				pkg.suite = suite
-				pkg.filename = path
+	for _, suite := range suites {
 
-				var version, release string
-				rpmname := filepath.Base(path)
-				pkg.binarypkg, version, release, pkg.arch, err = rpm.SplitRPMname2(rpmname, path)
-				if err != nil {
-					log.Printf("Ignoring %q: %v\n", rpmname, err)
+		res.suites[suite.Name] = true
+		res.idxSuites[suite.Name] = suite.Name
+
+		// Walk recursivly through the full cache directory, search all
+		// RPMs and store the meta data for them.
+		for i := range suite.Cache {
+			if *verbose {
+				log.Printf("Read %q from %q...", suite.Cache[i], suite.Name)
+			}
+			err := filepath.WalkDir(suite.Cache[i],
+				func(path string, di fs.DirEntry, err error) error {
+					if err != nil {
+						return err
+					}
+					if strings.HasSuffix(path, ".rpm") {
+						// Add RPM to package list
+						pkg := new(pkgEntry)
+						// We don't have "suites" yet
+						pkg.suite = suite.Name
+						pkg.filename = path
+
+						var version, release string
+						rpmname := filepath.Base(path)
+						pkg.binarypkg, version, release, pkg.arch, err = rpm.SplitRPMname2(rpmname, path)
+						if err != nil {
+							log.Printf("Ignoring %q: %v\n", rpmname, err)
+							return nil
+						}
+						pkg.version = version + "-" + release;
+
+						pkg.sourcerpm, err = rpm.GetSourceRPMName(path)
+						if err != nil {
+							return err
+						}
+						// We don't need the version and rest of the source RPM name
+						pkg.source, _, _, _, err = rpm.SplitRPMname(pkg.sourcerpm)
+
+						res.pkgs = append (res.pkgs, pkg)
+
+						latestVersion[suite.Name + "/" + pkg.binarypkg] = &manpage.PkgMeta{
+							Filename: path,
+							Sourcepkg: pkg.source,
+							Binarypkg: pkg.binarypkg,
+							Version: pkg.version,
+							Suite: suite.Name,
+						}
+					}
 					return nil
-				}
-				pkg.version = version + "-" + release;
-
-				pkg.sourcerpm, err = rpm.GetSourceRPMName(path)
-				if err != nil {
-					return err
-				}
-				// We don't need the version and rest of the source RPM name
-				pkg.source, _, _, _, err = rpm.SplitRPMname(pkg.sourcerpm)
-
-				res.pkgs = append (res.pkgs, pkg)
-
-				latestVersion[suite + "/" + pkg.binarypkg] = &manpage.PkgMeta{
-					Filename: path,
-					Sourcepkg: pkg.source,
-					Binarypkg: pkg.binarypkg,
-					Version: pkg.version,
-					Suite: suite,
-				}
+				})
+			if err != nil {
+				log.Println("WalkDir(%q): %v", suite.Cache[i], err)
 			}
-			return nil
-		})
-	if err != nil {
-		log.Println(err)
+		}
 	}
 
-	err = getAllContents(res.pkgs)
+	err := getAllContents(res.pkgs)
 	if err != nil {
 		return res, err
 	}
