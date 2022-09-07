@@ -11,9 +11,9 @@ rpm2docserv is based on [debiman](https://github.com/Debian/debiman)
 ## Prerequisites
 
 * mandoc
-  * zypper registred to the right product if not build in a container
+* zypper registred to the right product if not build in a container
 or
-  * local RPM cache
+* local RPM cache
 
 ## Build
 
@@ -23,7 +23,7 @@ This builds the binaries, fetches the RPMs and extracts the manual page and
 builds a nginx container with the data:
 
 ```sh
-sudo podman build --no-cache  -t docserv .
+sudo podman build -t docserv .
 ```
 
 ### From source on local system
