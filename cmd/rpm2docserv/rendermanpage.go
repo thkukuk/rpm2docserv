@@ -219,7 +219,7 @@ func (p bySuite) Less(i, j int) bool {
 	orderi, oki := sortOrder[p[i].Package.Suite]
 	orderj, okj := sortOrder[p[j].Package.Suite]
 	if !oki || !okj {
-		// if we have know a suite, prefer that over the unknown one
+		// if we have a known suite, prefer that over the unknown one
 		if oki && !okj {
 			return true
 		}

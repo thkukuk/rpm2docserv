@@ -22,7 +22,7 @@ type pkgEntry struct {
         binarypkg  string
         arch       string
         filename   string
-        version    string
+        version    version.Version
 	manpageList []string
 }
 
@@ -55,15 +55,29 @@ type globalView struct {
 	start time.Time
 }
 
-type byPkgVer []*pkgEntry
-func (p byPkgVer) Len() int      { return len(p) }
-func (p byPkgVer) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p byPkgVer) Less(i, j int) bool {
-	// Higher versions should come before lower ones, so higher is less
+type bySuitePkgVer []*pkgEntry
+func (p bySuitePkgVer) Len() int      { return len(p) }
+func (p bySuitePkgVer) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p bySuitePkgVer) Less(i, j int) bool {
+	if p[i].suite != p[j].suite {
+		// if the suite is different, sort according to product name
+		orderi, oki := sortOrder[p[i].suite]
+		orderj, okj := sortOrder[p[j].suite]
+		if !oki || !okj {
+			// if we have a known suite, prefer that over the unknown one
+			if oki && !okj {
+				return true
+			}
+			if okj && !oki {
+				return false
+			}
+			return p[i].suite < p[j].suite
+		}
+		return orderi < orderj
+	}
 	if p[i].binarypkg == p[j].binarypkg {
-		v1 := version.NewVersion(p[i].version)
-		v2 := version.NewVersion(p[j].version)
-		return v2.LessThan(v1)
+		// Higher versions should come before lower ones, so higher is less
+		return p[j].version.LessThan(p[i].version)
 	}
 	return p[i].binarypkg < p[j].binarypkg
 }
@@ -107,8 +121,6 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 		start:         start,
 	}
 
-	latestVersion := make(map[string]*manpage.PkgMeta)
-
 	for _, suite := range suites {
 
 		res.suites[suite.Name] = true
@@ -128,18 +140,17 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 					if strings.HasSuffix(path, ".rpm") {
 						// Add RPM to package list
 						pkg := new(pkgEntry)
-						// We don't have "suites" yet
 						pkg.suite = suite.Name
 						pkg.filename = path
 
-						var version, release string
+						var rpmversion, rpmrelease string
 						rpmname := filepath.Base(path)
-						pkg.binarypkg, version, release, pkg.arch, err = rpm.SplitRPMname2(rpmname, path)
+						pkg.binarypkg, rpmversion, rpmrelease, pkg.arch, err = rpm.SplitRPMname2(rpmname, path)
 						if err != nil {
 							log.Printf("Ignoring %q: %v\n", rpmname, err)
 							return nil
 						}
-						pkg.version = version + "-" + release;
+						pkg.version = version.NewVersion(rpmversion + "-" + rpmrelease)
 
 						pkg.sourcerpm, err = rpm.GetSourceRPMName(path)
 						if err != nil {
@@ -149,25 +160,33 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 						pkg.source, _, _, _, err = rpm.SplitRPMname(pkg.sourcerpm)
 
 						res.pkgs = append (res.pkgs, pkg)
-
-						latestVersion[suite.Name + "/" + pkg.binarypkg] = &manpage.PkgMeta{
-							Filename: path,
-							Sourcepkg: pkg.source,
-							Binarypkg: pkg.binarypkg,
-							Version: pkg.version,
-							Suite: suite.Name,
-						}
 					}
 					return nil
 				})
 			if err != nil {
-				log.Println("WalkDir(%q): %v", suite.Cache[i], err)
+				return res, fmt.Errorf("WalkDir(%q): %v", suite.Cache[i], err)
 			}
 		}
 	}
 
 	// sort the package list, so that packages with a higher version comes first
-	sort.Stable(byPkgVer(res.pkgs))
+	sort.Stable(bySuitePkgVer(res.pkgs))
+
+	// build an index with the latest version of a package,
+	// ignoring all lower versions of the same package
+	latestVersion := make(map[string]*manpage.PkgMeta)
+	for _, pkg := range res.pkgs {
+		key := pkg.suite + "/" + pkg.binarypkg
+		if _, exists := latestVersion[key]; !exists {
+			latestVersion[key] = &manpage.PkgMeta{
+				Filename: pkg.filename,
+				Sourcepkg: pkg.source,
+				Binarypkg: pkg.binarypkg,
+				Version: pkg.version,
+				Suite: pkg.suite,
+			}
+		}
+	}
 
 	err := getAllContents(res.pkgs)
 	if err != nil {

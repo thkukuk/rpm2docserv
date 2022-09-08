@@ -8,6 +8,7 @@ import (
 
 	"github.com/thkukuk/rpm2docserv/pkg/tag"
 	"golang.org/x/text/language"
+	"github.com/knqyf263/go-rpm-version"
 )
 
 type PkgMeta struct {
@@ -17,7 +18,7 @@ type PkgMeta struct {
 	Replaces  []string
 
 	// Version is used by the templates when rendering.
-	Version string
+	Version version.Version
 
 	// Suite is the Debian suite in which this binary package was
 	// found.
