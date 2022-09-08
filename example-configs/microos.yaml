@@ -1,0 +1,14 @@
+productname: openSUSE MicroOS
+producturl: https://microos.opensuse.org
+logourl: https://microos.opensuse.org/assets/images/microos-logo.svg
+download: true
+products:
+  - name: openSUSE MicroOS
+    cache: 
+      - /var/cache/MicroOS-RPMs
+    packages:
+      - patterns-microos-basesystem
+      - patterns-microos-defaults
+      - patterns-containers-container_runtime
+      - patterns-microos-selinux
+      - patterns-base-documentation

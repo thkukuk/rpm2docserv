@@ -2,7 +2,11 @@
 
 <div class="maincontents">
 
-<h1>{{ .Title }}</h1>
+{{ if .ProductUrl -}}
+<h1>{{ .ProductName }} Documentation Server</h1>
+{{ else -}}
+<h1>Documentation Server</h1>
+{{ end -}}
 
 <p>
   You’re looking at a repository of manpages and other documentation.

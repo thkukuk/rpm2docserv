@@ -25,12 +25,14 @@ type Suites struct {
 }
 
 type Config struct {
-	Title      string `yaml:"title"`
-	ServingDir string `yaml:"servingdir"`
-	IndexPath  string `yaml:"auxindex"`
-	Download   string `yaml:"download"`
-	Products   []Suites `yaml:"products"`
-	SortOrder  []string `yaml:"sortorder"`
+	ProductName string `yaml:"productname,omitempty"`
+	ProductUrl  string `yaml:"producturl,omitempty"`
+	LogoUrl     string `yaml:"logourl,omitempty"`
+	ServingDir  string `yaml:"servingdir"`
+	IndexPath   string `yaml:"auxindex"`
+	Download    string `yaml:"download"`
+	Products    []Suites `yaml:"products"`
+	SortOrder   []string `yaml:"sortorder"`
 }
 
 var (
@@ -75,11 +77,10 @@ var (
 		false,
 		"Show rpm2docserv version and exit")
 
-	indexTitle = flag.String("index-title",
-		"Documentation Server",
-		"Title for the main index page")
-
-	suites []Suites
+	productName string
+        productUrl  string
+	logoUrl     string
+	suites      []Suites
 )
 
 // use go build -ldflags "-X main.rpm2docservVersion=<version>" to set the version
@@ -199,9 +200,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if len(config.Title) > 0 {
-			indexTitle = &config.Title
-		}
 		if len(config.ServingDir) > 0 {
 			servingDir = &config.ServingDir
 		}
@@ -224,6 +222,9 @@ func main() {
 			}
 		}
 
+		productName = config.ProductName
+		productUrl = config.ProductUrl
+		logoUrl = config.LogoUrl
 		suites = config.Products
 	} else {
 		suites = make([]Suites, 1)

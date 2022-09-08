@@ -8,7 +8,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  {{ if .Title -}}
   <title>{{ .Title }}</title>
+  {{ else -}}
+  <title>{{ .ProductName }} Documentation Server</title>
+  {{ end -}}
 
   <style type="text/css">
   {{ template "style" }}
@@ -27,9 +31,11 @@
         <span>MANPAGES</span>
       </div>
       <div class="image">
-        <a href="/">
-          <img src="https://microos.opensuse.org/assets/images/microos-logo.svg" alt="MicroOS" width="70" height="70">
-        </a>
+        {{ if .LogoUrl -}}
+        <img src="{{ .LogoUrl }}" alt="Logo" width="70" height="70">
+        {{ else -}}
+<img src="https://microos.opensuse.org/assets/images/microos-logo.svg" alt="MicroOS" width="70" height="70">
+        {{ end -}}
       </div>
     </div>
 
@@ -43,9 +49,11 @@
           <li>
             <a href="/about.html">About Manpages</a>
           </li>
+	  {{ if .ProductUrl -}}
           <li>
-            <a href="https://microos.opensuse.org/">openSUSE MicroOS</a>
+            <a href="{{ .ProductUrl }}">{{ .ProductName }}</a>
           </li>
+	  {{ end -}}
         </ul>
       </nav>
 

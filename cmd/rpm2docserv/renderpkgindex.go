@@ -38,6 +38,9 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	return write.Atomically(dest, true, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title          string
+			ProductName    string
+			ProductUrl     string
+			LogoUrl        string
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -48,6 +51,9 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			HrefLangs      []*manpage.Meta
 		}{
 			Title:          fmt.Sprintf("Manpages of %s", first.Package.Binarypkg),
+			ProductName:    productName,
+			ProductUrl:     productUrl,
+			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},
@@ -78,6 +84,9 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 	return write.Atomically(dest, true, func(w io.Writer) error {
 		return srcpkgindexTmpl.Execute(w, struct {
 			Title          string
+			ProductName    string
+			ProductUrl     string
+			LogoUrl        string
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -89,6 +98,9 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 			Src            string
 		}{
 			Title:          fmt.Sprintf("Manpages of src:%s", src),
+			ProductName:    productName,
+			ProductUrl:     productUrl,
+			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},

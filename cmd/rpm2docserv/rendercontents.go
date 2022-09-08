@@ -23,6 +23,9 @@ func renderContents(dest, suite string, bins []string) error {
 	if err := write.Atomically(dest, true, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
+			ProductName    string
+			ProductUrl     string
+			LogoUrl        string
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -32,6 +35,9 @@ func renderContents(dest, suite string, bins []string) error {
 			HrefLangs      []*manpage.Meta
 		}{
 			Title:          fmt.Sprintf("Manpages of %s", suite),
+			ProductName:    productName,
+			ProductUrl:     productUrl,
+			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/%s/index.html", suite), suite},

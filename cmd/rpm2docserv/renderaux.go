@@ -55,6 +55,9 @@ func renderAux(destDir string, gv globalView) error {
 	if err := write.Atomically(filepath.Join(destDir, "index.html.gz"), true, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {
 			Title          string
+			ProductName    string
+			ProductUrl     string
+			LogoUrl        string
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -62,7 +65,10 @@ func renderAux(destDir string, gv globalView) error {
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 		}{
-			Title:          *indexTitle,
+			Title:          "",
+			ProductName:    productName,
+			ProductUrl:     productUrl,
+			LogoUrl:        logoUrl,
 			Suites:         suites,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
@@ -73,6 +79,9 @@ func renderAux(destDir string, gv globalView) error {
 	if err := write.Atomically(filepath.Join(destDir, "about.html.gz"), true, func(w io.Writer) error {
 		return aboutTmpl.Execute(w, struct {
 			Title          string
+			ProductName    string
+			ProductUrl     string
+			LogoUrl        string
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -80,6 +89,9 @@ func renderAux(destDir string, gv globalView) error {
 			HrefLangs      []*manpage.Meta
 		}{
 			Title:          "About",
+			ProductName:    productName,
+			ProductUrl:     productUrl,
+			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
 	}); err != nil {

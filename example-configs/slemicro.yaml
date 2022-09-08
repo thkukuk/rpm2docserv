@@ -1,4 +1,6 @@
-title: SLE Micro Documentation Server
+productname: SLE Micro
+producturl: https://www.suse.com/products/micro/
+logourl: https://www.suse.com/assets/img/suse-white-logo-green.svg
 servingdir: /extern/sle-micro/docserv
 products:
   - name: SLE Micro 5.1

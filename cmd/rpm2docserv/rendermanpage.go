@@ -195,6 +195,9 @@ var notYetRenderedSentinel = errors.New("Not yet rendered")
 
 type manpagePrepData struct {
 	Title          string
+	ProductName    string
+	ProductUrl     string
+	LogoUrl        string
 	Rpm2docservVersion string
 	Breadcrumbs    breadcrumbs
 	FooterExtra    template.HTML
@@ -412,6 +415,9 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 
 	return t, manpagePrepData{
 		Title:          title,
+		ProductName:    productName,
+		ProductUrl:     productUrl,
+		LogoUrl:        logoUrl,
 		Rpm2docservVersion: rpm2docservVersion,
 		Breadcrumbs: breadcrumbs{
 			{fmt.Sprintf("/%s/index.html", meta.Package.Suite), meta.Package.Suite},
