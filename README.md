@@ -40,10 +40,18 @@ make
 
 ### As container
 
-This runs the container and makes the webserver available on port 80:
+This runs the container and makes the webserver available on port 80 and 443.
+If no own certificates are provided, self signed ones will be generated:
 
 ```sh
-sudo podman run -it --rm --name docserv -p 80:80 localhost/docserv
+sudo podman run -it --rm --name docserv -p 80:80 -p 443:443 localhost/docserv
+```
+
+The default path for certificates are:
+```
+        ssl_certificate      /etc/ssl/certs/nginx.crt;
+        ssl_certificate_key  /etc/ssl/private/nginx.key;
+        ssl_dhparam          /etc/nginx/dhparam.pem;
 ```
 
 ### From local directory
