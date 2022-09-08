@@ -73,6 +73,4 @@ and will be placed in -serving-dir uncompressed.
 
 * Optimze speed when gathering RPMs
 * Broken manual pages are not rendered but still part of xref/auxserver
-* Duplicate RPMs: sort them so that the newest (higher version) is used
-* Document how to configure and use https
 * https://www.sitemaps.org/ - Write extra tool to create sitemaps.xml files. Since this files contain the hostname, but we want to be independ in a container, create this files on demand when starting the container
