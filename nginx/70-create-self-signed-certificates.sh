@@ -23,5 +23,5 @@ if [ ! -f "$CRT" ] && [ ! -f "$KEY" ]; then
 
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=${SSL_CA_CSR_COUNTRY}/ST=${SSL_CA_CSR_STATE}/O=${SSL_CA_CSR_ORGANIZATION_UNIT}/CN=${SSL_CA_CSR_CN}" -keyout "$KEY" -out "$CRT"
 
-    test -f /etc/nginx/dhparam.pem || openssl dhparam -out /etc/nginx/dhparam.pem 4096
+    #test -f /etc/nginx/dhparam.pem || openssl dhparam -out /etc/nginx/dhparam.pem 4096
 fi
