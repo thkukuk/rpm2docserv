@@ -5,11 +5,14 @@ import (
 	"log"
 	"io/fs"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/thkukuk/rpm2docserv/pkg/manpage"
 	"github.com/thkukuk/rpm2docserv/pkg/rpm"
+
+	"github.com/knqyf263/go-rpm-version"
 )
 
 type pkgEntry struct {
@@ -51,6 +54,20 @@ type globalView struct {
 	stats *stats
 	start time.Time
 }
+
+type byPkgVer []*pkgEntry
+func (p byPkgVer) Len() int      { return len(p) }
+func (p byPkgVer) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byPkgVer) Less(i, j int) bool {
+	// Higher versions should come before lower ones, so higher is less
+	if p[i].binarypkg == p[j].binarypkg {
+		v1 := version.NewVersion(p[i].version)
+		v2 := version.NewVersion(p[j].version)
+		return v2.LessThan(v1)
+	}
+	return p[i].binarypkg < p[j].binarypkg
+}
+
 
 func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*manpage.Meta, filename string, key string) error {
         if _, ok := latestVersion[key]; !ok {
@@ -148,6 +165,9 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 			}
 		}
 	}
+
+	// sort the package list, so that packages with a higher version comes first
+	sort.Stable(byPkgVer(res.pkgs))
 
 	err := getAllContents(res.pkgs)
 	if err != nil {
