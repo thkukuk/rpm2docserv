@@ -1,6 +1,3 @@
-RPM2DOCSERV_BIN := bin/rpm2docserv
-AUXSERV_BIN := bin/docserv-auxserv
-
 GO ?= go
 GO_MD2MAN ?= go-md2man
 
@@ -35,7 +32,7 @@ build: ## Build the binary files
 	$(GO) build -v -o bin/ $(USE_VENDOR) $(LOCAL_LDFLAGS) ./cmd/...
 
 clean: ## Remove previous builds
-	@rm -f $(RPM2DOCSERV_BIN)
+	@rm -f bin/*
 
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
