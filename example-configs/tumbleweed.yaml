@@ -1,0 +1,10 @@
+productname: openSUSE Tumbleweed
+producturl: https://www.opensuse.org
+logourl: https://www.opensuse.org/build/images/opensuse-logo.png
+servingdir: /extern/docserv
+download: false
+products:
+  - name: openSUSE Tumbleweed
+    cache: 
+      - /extern/Tumbleweed/x86_64
+      - /extern/Tumbleweed/noarch
