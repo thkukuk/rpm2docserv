@@ -28,12 +28,18 @@ sudo podman build -t docserv .
 
 ### From source on local system
 
-This builds only the binaries
+Build the binaries:
 
 ```sh
 git clone https://github.com/thkukuk/rpm2docserv
 cd rpm2docserv
 make
+```
+
+Generate `/srv/docserv` with a default set of patterns resolved:
+
+```sh
+rpm2docserv
 ```
 
 ## Run
@@ -56,11 +62,32 @@ The default path for certificates are:
 
 ### From local directory
 
+#### Test and development
+
+`docserv-minisrv` is a simple web server including the "auxserver". It is very
+useful to test your result, but should not be used for production:
+
 ```sh
-rpm2docserv
+bin/debiman-minisrv -serving_dir=<path>
 ```
 
-Will generate `/srv/docserv` with a default set of patterns resolved.
+The webserver is accessible on `localhost:8089`.
+
+#### Production web server
+
+The `/srv/docserv` directory contains a file `auxserver.idx` served by
+`docserv-auxserver`, which allows to search for specific manual pages.
+
+There are several ways how to provide the manual pages:
+
+1. Using `nginx` and `docserv-auxserver` as second daemon for search
+2. Using `apache` and `docserv-auxserver` as second daemon for search
+3. Using `apache` standalone with a rewrite map and rewrite rules for search
+
+For the first two cases, `docserv-auxserver` needs to be run on the same host
+than the web server. The daemon must be accessible via
+`http://localhost:2431`. Example configuration files for nginx and apache 2.4
+can be found in the corresponding directories: [nginx](nginx) and [apache](apache2).
 
 ## Customization
 
