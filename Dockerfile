@@ -1,6 +1,6 @@
 FROM opensuse/tumbleweed AS build-stage
 WORKDIR /src
-RUN zypper clean && zypper ref -f && zypper --non-interactive install --no-recommends mandoc go make git cpio
+RUN zypper clean && zypper ref -f && zypper --non-interactive install --no-recommends mandoc go make git cpio openssl
 RUN mkdir -p rpm2docserv
 COPY . rpm2docserv/
 RUN cd rpm2docserv && make VERSION=$(git show -s --format=%cd.%h --date=format:%Y%m%d)
@@ -20,3 +20,5 @@ COPY --from=build-stage /srv/docserv /srv/docserv
 COPY --from=build-stage /src/rpm2docserv/bin/* /usr/local/bin
 COPY nginx/nginx.conf /usr/local/nginx/etc/
 COPY nginx/*.sh /docker-entrypoint.d/
+COPY --from=build-stage /usr/bin/openssl /usr/bin/
+COPY --from=build-stage /etc/ssl/openssl.cnf /etc/ssl/
