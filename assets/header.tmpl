@@ -91,7 +91,7 @@
     </button>
   </nav>
   <div id="megamenu" class="megamenu collapse"></div>
-  {{ if and (.Breadcrumbs) (gt (len .Breadcrumbs) 1) -}}
+  {{ if and (.Breadcrumbs) (gt (len .Breadcrumbs) 0) -}}
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ BaseURLPath }}/">{{ template "icon" . }}{{ .ProductName }} Manuals</a></li>
     {{- range $i, $b := .Breadcrumbs }}
