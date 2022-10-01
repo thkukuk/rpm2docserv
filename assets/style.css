@@ -35,6 +35,10 @@
     list-style: none;
 }
 
+.breadcrumb-item svg {
+  fill: currentColor;
+}
+
 .maincontent {
     width: 100%;
     max-width: 80ch;

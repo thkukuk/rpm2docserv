@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"os"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
@@ -83,5 +84,10 @@ func MustParseCommonTmpls() *template.Template {
 	t = template.Must(t.New("footer").Funcs(funcmap).Parse(bundled.Asset("footer.tmpl")))
 	t = template.Must(t.New("style").Funcs(funcmap).Parse(bundled.Asset("style.css")))
 	t = template.Must(t.New("chameleon").Funcs(funcmap).Parse(bundled.Asset("chameleon.css")))
+	if _, err := os.Stat("/usr/share/icons/hicolor/symbolic/apps/distributor-logo-symbolic.svg"); err == nil {
+		t = template.Must(t.New("icon").Funcs(funcmap).Parse(bundled.Asset("icon.svg")))
+	} else {
+		t = template.Must(t.New("icon").Funcs(funcmap).Parse(bundled.Asset("fallback-icon.svg")))
+	}
 	return t
 }

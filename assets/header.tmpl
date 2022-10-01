@@ -16,8 +16,9 @@
 
   <!-- Would be nice to have a config option to use the online version if this is the version served as a website
        this way we would reuse cache of css and js files from there instead of serving this specifically for one site
-       we would also add in megamenu this way, and js required for megamenu, as follows:
        <style src="//static.opensuse.org/chameleon-3.0/dist/css/chameleon.css"></style>
+
+       we would also add in megamenu this way, and js required for megamenu, as follows:
        <script defer="" src="https://static.opensuse.org/chameleon-3.0/dist/js/jquery.slim.js"></script>
        <script defer="" src="https://static.opensuse.org/chameleon-3.0/dist/js/bootstrap.bundle.js"></script>
        <script defer="" src="https://static.opensuse.org/chameleon-3.0/dist/js/chameleon.js"></script>
@@ -92,6 +93,7 @@
   <div id="megamenu" class="megamenu collapse"></div>
   {{ if and (.Breadcrumbs) (gt (len .Breadcrumbs) 1) -}}
   <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ BaseURLPath }}/">{{ template "icon" . }}{{ .ProductName }} Manuals</a></li>
     {{- range $i, $b := .Breadcrumbs }}
     {{ if eq $b.Link "" }}
     <li class="breadcrumb-item active">{{ $b.Text }}</li>

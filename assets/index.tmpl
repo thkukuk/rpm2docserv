@@ -3,7 +3,7 @@
 <div class="maincontents">
 
 {{ if .ProductUrl -}}
-<h1>{{ .ProductName }} Documentation Server</h1>
+<h1>{{ template "icon" . }}{{ .ProductName }} Documentation Server</h1>
 {{ else -}}
 <h1>Documentation Server</h1>
 {{ end -}}
