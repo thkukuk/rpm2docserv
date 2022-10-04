@@ -93,7 +93,16 @@
   <div id="megamenu" class="megamenu collapse"></div>
   {{ if and (.Breadcrumbs) (gt (len .Breadcrumbs) 0) -}}
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ BaseURLPath }}/">{{ template "icon" . }}{{ .ProductName }} Manuals</a></li>
+    <li class="breadcrumb-item">
+      <a href="{{ BaseURLPath }}/">
+        {{ if .LogoUrl -}}
+        <img src="{{ .LogoUrl }}" alt="Logo" width="16" height="16">
+        {{ else -}}
+        {{ template "icon" . }}
+        {{ end -}}
+        {{ .ProductName }} Manuals
+      </a>
+    </li>
     {{- range $i, $b := .Breadcrumbs }}
     {{ if eq $b.Link "" }}
     <li class="breadcrumb-item active">{{ $b.Text }}</li>
