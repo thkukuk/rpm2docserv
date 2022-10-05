@@ -52,16 +52,40 @@
   
     <div class="collapse navbar-collapse" id="navbar-collapse">
       <ul class="nav navbar-nav mr-auto flex-md-shrink-0">
+        {{ if .ProductUrl -}}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ .ProductUrl }}">
+            {{ .ProductName }} Website
+          </a>
+        </li>
+	{{ end -}}
         <li class="nav-item">
           <a class="nav-link" href="{{ BaseURLPath }}/about.html">
             About
           </a>
         </li>
+        {{ if and (.Suites) (gt (len .Suites) 1) -}}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="cat-menu-link" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Repository Indices
+          </a>
+          <div class="dropdown-menu" aria-labelledby="cat-menu-link">
+            {{ range $idx, $suite := .Suites }}
+            <a class="dropdown-item" href="{{ BaseURLPath }}/{{ $suite }}/index.html">
+              {{ $suite }}
+            </a>
+            {{ end }}
+          </div>
+        </li>
+        {{ else -}}
+        {{ range $idx, $suite := .Suites }}
         <li class="nav-item">
-          <a class="nav-link" href="{{ BaseURLPath }}/manpages/index.html">
+          <a class="nav-link" href="{{ BaseURLPath }}/{{ $suite }}/index.html">
             Repository Index
           </a>
         </li>
+        {{ end }}
+        {{ end -}}
       </ul>
       <form class="form-inline mr-md-3" action="{{ BaseURLPath }}/jump" method="get">
         <div class="input-group">
@@ -96,7 +120,7 @@
     <li class="breadcrumb-item">
       <a href="{{ BaseURLPath }}/">
         {{ if .LogoUrl -}}
-        <img src="{{ .LogoUrl }}" alt="Logo" width="16" height="16">
+        <img src="{{ .LogoUrl }}" alt="Logo" width="20" height="20">
         {{ else -}}
         {{ template "icon" . }}
         {{ end -}}

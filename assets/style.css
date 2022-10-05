@@ -59,11 +59,6 @@
   opacity: 0.5;
 }
 
-.otherversions {
-    /* Limit the content’s width */
-    width: 200px;
-}
-
 .otherversions li,
 .otherlangs li {
     display: flex;
