@@ -87,12 +87,14 @@ func renderAux(destDir string, gv globalView) error {
 			FooterExtra    string
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
+			Suites         []string
 		}{
 			Title:          "About",
 			ProductName:    productName,
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
+			Suites:         suites,
 		})
 	}); err != nil {
 		return err

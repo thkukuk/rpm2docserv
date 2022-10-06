@@ -151,7 +151,7 @@ func listManpages(dir string) (map[string]*manpage.Meta, error) {
 	return manpageByName, nil
 }
 
-func renderDirectoryIndex(dir string, newestModTime time.Time) error {
+func renderDirectoryIndex(dir string, newestModTime time.Time, gv globalView) error {
 	st, err := os.Stat(filepath.Join(dir, "index.html.gz"))
 	if !*forceRerender && err == nil && st.ModTime().After(newestModTime) {
 		return nil
@@ -167,7 +167,7 @@ func renderDirectoryIndex(dir string, newestModTime time.Time) error {
 		return nil
 	}
 
-	return renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName)
+	return renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName, gv)
 }
 
 // walkManContents walks over all entries in dir and, depending on mode, does:
@@ -389,7 +389,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 
 					// and finally render the package index files which need to
 					// consider both regular files and symlinks.
-					if err := renderDirectoryIndex(dir, newestModTime); err != nil {
+					if err := renderDirectoryIndex(dir, newestModTime, gv); err != nil {
 						return err
 					}
 
@@ -447,7 +447,7 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 			if err := os.MkdirAll(srcDir, 0755); err != nil {
 				return err
 			}
-			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html.gz"), src, manpages); err != nil {
+			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html.gz"), src, manpages, gv); err != nil {
 				return err
 			}
 		}
@@ -534,7 +534,7 @@ func renderAll(gv globalView) error {
 			return err
 		}
 
-		if err := renderContents(filepath.Join(*servingDir, sfi.Name(), "index.html.gz",), sfi.Name(), names); err != nil {
+		if err := renderContents(filepath.Join(*servingDir, sfi.Name(), "index.html.gz",), sfi.Name(), names, gv); err != nil {
 			return err
 		}
 

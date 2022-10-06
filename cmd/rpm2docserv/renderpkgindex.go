@@ -22,7 +22,7 @@ func mustParseSrcPkgindexTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("srcpkgindex").Parse(bundled.Asset("srcpkgindex.tmpl")))
 }
 
-func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
+func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv globalView) error {
 	var first *manpage.Meta
 	for _, m := range manpageByName {
 		first = m
@@ -34,6 +34,12 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 		mans = append(mans, n)
 	}
 	sort.Strings(mans)
+
+	suites := make([]string, 0, len(gv.suites))
+	for suite := range gv.suites {
+		suites = append(suites, suite)
+	}
+	sort.Stable(bySuiteStr(suites))
 
 	return write.Atomically(dest, true, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
@@ -49,6 +55,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			ManpageByName  map[string]*manpage.Meta
 			Mans           []string
 			HrefLangs      []*manpage.Meta
+			Suites         []string
 		}{
 			Title:          fmt.Sprintf("Manpages of %s", first.Package.Binarypkg),
 			ProductName:    productName,
@@ -64,11 +71,13 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			Meta:          first,
 			ManpageByName: manpageByName,
 			Mans:          mans,
+			Suites:        suites,
 		})
 	})
 }
 
-func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpage.Meta) error {
+func renderSrcPkgindex(dest string, src string,
+	               manpageByName map[string]*manpage.Meta, gv globalView) error {
 	var first *manpage.Meta
 	for _, m := range manpageByName {
 		first = m
@@ -80,6 +89,12 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 		mans = append(mans, n)
 	}
 	sort.Strings(mans)
+
+	suites := make([]string, 0, len(gv.suites))
+	for suite := range gv.suites {
+		suites = append(suites, suite)
+	}
+	sort.Stable(bySuiteStr(suites))
 
 	return write.Atomically(dest, true, func(w io.Writer) error {
 		return srcpkgindexTmpl.Execute(w, struct {
@@ -96,6 +111,7 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 			Mans           []string
 			HrefLangs      []*manpage.Meta
 			Src            string
+			Suites         []string
 		}{
 			Title:          fmt.Sprintf("Manpages of src:%s", src),
 			ProductName:    productName,
@@ -112,6 +128,7 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 			ManpageByName: manpageByName,
 			Mans:          mans,
 			Src:           src,
+			Suites:        suites,
 		})
 	})
 }
