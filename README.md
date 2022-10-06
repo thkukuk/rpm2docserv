@@ -67,7 +67,7 @@ The default path for certificates are:
 `docserv-minisrv` is a simple web server including the "auxserver". It is very
 useful to test your result, but should not be used for production:
 
-```sh
+```
 bin/debiman-minisrv -serving_dir=<path>
 ```
 
