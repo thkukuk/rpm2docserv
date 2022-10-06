@@ -201,7 +201,7 @@ type manpagePrepData struct {
 	Rpm2docservVersion string
 	Breadcrumbs    breadcrumbs
 	FooterExtra    template.HTML
-	Suites         []*manpage.Meta
+	AltVersions    []*manpage.Meta
 	Versions       []*manpage.Meta
 	Sections       []*manpage.Meta
 	Bins           []*manpage.Meta
@@ -212,6 +212,7 @@ type manpagePrepData struct {
 	Ambiguous      map[*manpage.Meta]bool
 	Content        template.HTML
 	Error          error
+	Suites         []string
 }
 
 type bySuite []*manpage.Meta
@@ -246,7 +247,7 @@ func (p byBinarypkg) Len() int           { return len(p) }
 func (p byBinarypkg) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p byBinarypkg) Less(i, j int) bool { return p[i].Package.Binarypkg < p[j].Package.Binarypkg }
 
-func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Template, manpagePrepData, error) {
+func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView) (*template.Template, manpagePrepData, error) {
 	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
@@ -296,7 +297,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		log.Printf("rendering %q", job.dest)
 	}
 
-	suites := make([]*manpage.Meta, 0, len(job.versions))
+	altVersions := make([]*manpage.Meta, 0, len(job.versions))
 	for _, v := range job.versions {
 		if !v.Package.SameBinary(meta.Package) {
 			continue
@@ -310,10 +311,10 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		if v.Language != meta.Language {
 			continue
 		}
-		suites = append(suites, v)
+		altVersions = append(altVersions, v)
 	}
 
-	sort.Stable(bySuite(suites))
+	sort.Stable(bySuite(altVersions))
 
 	bySection := make(map[string][]*manpage.Meta)
 	for _, v := range job.versions {
@@ -390,6 +391,12 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	sort.Sort(byLanguage(langs))
 	sort.Sort(byLanguage(hrefLangs))
 
+	suites := make([]string, 0, len(gv.suites))
+	for suite := range gv.suites {
+		suites = append(suites, suite)
+	}
+	sort.Stable(bySuiteStr(suites))
+
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s", meta.Name, meta.Section, meta.Package.Binarypkg)
 	shorttitle := fmt.Sprintf("%s(%s)", meta.Name, meta.Section)
@@ -425,7 +432,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 			{"", shorttitle},
 		},
 		FooterExtra: template.HTML(footerExtra.String()),
-		Suites:      suites,
+		AltVersions: altVersions,
 		Versions:    job.versions,
 		Sections:    sections,
 		Bins:        bins,
@@ -436,6 +443,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		Ambiguous:   ambiguous,
 		Content:     template.HTML(content),
 		Error:       renderErr,
+		Suites:      suites,
 	}, nil
 }
 
@@ -446,8 +454,8 @@ func (c *countingWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob) (uint64, error) {
-	t, data, err := rendermanpageprep(converter, job)
+func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob, gv globalView) (uint64, error) {
+	t, data, err := rendermanpageprep(converter, job, gv)
 	if err != nil {
 		return 0, err
 	}

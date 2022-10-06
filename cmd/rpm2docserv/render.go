@@ -484,7 +484,7 @@ func renderAll(gv globalView) error {
 			}
 
 			for r := range renderChan {
-				n, err := rendermanpage(gzipw, converter, r)
+				n, err := rendermanpage(gzipw, converter, r, gv)
 				if err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file

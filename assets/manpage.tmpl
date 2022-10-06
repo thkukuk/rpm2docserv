@@ -34,14 +34,14 @@ table of contents [v]
 </details>
 </div>
 
-{{ if gt (len .Suites) 1 }}
+{{ if gt (len .AltVersions) 1 }}
 <div class="panel otherversions" role="complementary">
 <div class="panel-heading" role="heading">
 other versions
 </div>
 <div class="panel-body">
 <ul class="list-group list-group-flush">
-{{ range $idx, $man := .Suites }}
+{{ range $idx, $man := .AltVersions }}
 <li class="list-group-item
 {{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
 ">
