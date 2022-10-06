@@ -1,116 +1,104 @@
 {{ template "header" . }}
 
 <div class="panels" id="panels">
-<div class="panel" role="complementary">
-<div class="panel-heading" role="heading">
-links
-</div>
-<div class="panel-body">
-<ul class="list-group list-group-flush">
-<li class="list-group-item">
-<a href="{{ BaseURLPath }}/{{ .Meta.PermaLink }}">language-indep link</a>
-</li>
-<li class="list-group-item">
-<a href="{{ BaseURLPath }}/{{ .Meta.RawPath }}">raw man page</a>
-</li>
-</ul>
-</div>
-</div>
+  <div class="card" role="complementary">
+    <div class="card-header" role="heading">
+      links
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <a href="{{ BaseURLPath }}/{{ .Meta.PermaLink }}">language-indep link</a>
+      </li>
+      <li class="list-group-item">
+        <a href="{{ BaseURLPath }}/{{ .Meta.RawPath }}">raw man page</a>
+      </li>
+    </ul>
+  </div>
 
-<div class="panel toc" role="complementary" style="padding-bottom: 0">
-<details>
-<summary>
-table of contents [v]
-</summary>
-<div class="panel-body">
-<ul class="list-group list-group-flush">
-{{ range $idx, $heading := .TOC }}
-<li class="list-group-item">
-  <a class="toclink" href="{{ FragmentLink $heading }}" title="{{ $heading }}">{{ $heading }}</a>
-</li>
-{{ end }}
-</ul>
-</div>
-</details>
-</div>
+  <div class="card toc" role="complementary" style="padding-bottom: 0">
+    <details>
+      <summary>
+        table of contents [v]
+      </summary>
+      <ul class="list-group list-group-flush">
+      {{ range $idx, $heading := .TOC }}
+        <li class="list-group-item">
+          <a class="toclink" href="{{ FragmentLink $heading }}" title="{{ $heading }}">{{ $heading }}</a>
+        </li>
+      {{ end }}
+      </ul>
+    </details>
+  </div>
 
 {{ if gt (len .AltVersions) 1 }}
-<div class="panel otherversions" role="complementary">
-<div class="panel-heading" role="heading">
-other versions
-</div>
-<div class="panel-body">
-<ul class="list-group list-group-flush">
-{{ range $idx, $man := .AltVersions }}
-<li class="list-group-item
-{{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
-">
-<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
-</li>
-{{ end }}
-</ul>
-</div>
-</div>
+  <div class="card otherversions" role="complementary">
+    <div class="card-header" role="heading">
+      other versions
+    </div>
+    <ul class="list-group list-group-flush">
+    {{ range $idx, $man := .AltVersions }}
+      <li class="list-group-item
+      {{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
+      ">
+        <a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
+      </li>
+    {{ end }}
+    </ul>
+  </div>
 {{ end }}
 
 {{ if gt (len .Langs) 1 }}
-<div class="panel otherlangs" role="complementary">
-<div class="panel-heading" role="heading">
-other languages
-</div>
-<div class="panel-body">
-<ul class="list-group list-group-flush">
-{{ range $idx, $man := .Langs }}
-<li class="list-group-item
-{{- if eq $man.Language $.Meta.Language }} active{{- end -}}
-">
-<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
-{{ if (index $.Ambiguous $man) }}
-<span class="pkgname">{{ $man.Package.Binarypkg }}</span>
-{{ end }}
-</li>
-{{ end }}
-</ul>
-</div>
-</div>
+  <div class="card otherlangs" role="complementary">
+    <div class="card-header" role="heading">
+      other languages
+    </div>
+    <ul class="list-group list-group-flush">
+    {{ range $idx, $man := .Langs }}
+      <li class="list-group-item
+      {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
+      ">
+        <a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
+        {{ if (index $.Ambiguous $man) }}
+        <span class="pkgname">{{ $man.Package.Binarypkg }}</span>
+        {{ end }}
+      </li>
+    {{ end }}
+    </ul>
+  </div>
 {{ end }}
 
 {{ if gt (len .Sections) 1 }}
-<div class="panel" role="complementary">
-<div class="panel-heading" role="heading">
-other sections
-</div>
-<div class="panel-body">
-<ul class="list-group list-group-flush">
-{{ range $idx, $man := .Sections }}
-<li class="list-group-item
-{{- if eq $man.Section $.Meta.Section }} active{{- end -}}
-">
-<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Section }} (<span title="{{ LongSection $man.MainSection }}">{{ ShortSection $man.MainSection }}</span>)</a>
-</li>
-{{ end }}
-</ul>
-</div>
-</div>
+  <div class="card" role="complementary">
+    <div class="card-header" role="heading">
+      other sections
+    </div>
+    <ul class="list-group list-group-flush">
+    {{ range $idx, $man := .Sections }}
+      <li class="list-group-item
+      {{- if eq $man.Section $.Meta.Section }} active{{- end -}}
+      ">
+        <a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Section }} (<span title="{{ LongSection $man.MainSection }}">{{ ShortSection $man.MainSection }}</span>)</a>
+      </li>
+    {{ end }}
+    </ul>
+  </div>
 {{ end }}
 
 {{ if gt (len .Bins) 1 }}
-<div class="panel" role="complementary">
-<div class="panel-heading" role="heading">
-conflicting packages
-</div>
-<div class="panel-body">
-<ul class="list-group list-group-flush">
-{{ range $idx, $man := .Bins }}
-<li class="list-group-item
-{{- if eq $man.Package.Binarypkg $.Meta.Package.Binarypkg }} active{{- end -}}
-">
-<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Binarypkg }}</a>
-</li>
-{{ end }}
-</ul>
-</div>
-</div>
+  <div class="card" role="complementary">
+    <div class="card-header" role="heading">
+      conflicting packages
+    </div>
+    <ul class="list-group list-group-flush">
+    {{ range $idx, $man := .Bins }}
+      <li class="list-group-item
+      {{- if eq $man.Package.Binarypkg $.Meta.Package.Binarypkg }} active{{- end -}}
+      ">
+        <a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Binarypkg }}</a>
+      </li>
+    {{ end }}
+    </ul>
+  </div>
 {{ end }}
 </div>
 
