@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -271,13 +272,16 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (e
 			"--extract",
 			"--unconditional",
 			"--preserve-modification-time",
+			"--no-preserve-owner",
 			"--make-directories")
 
 		cpio.Stdin, _ = rpm2cpio.StdoutPipe()
 		cpio.Stdout = os.Stdout
+		var stderrb bytes.Buffer
+		cpio.Stderr = &stderrb
 		err = cpio.Start()
 		if err != nil {
-			return fmt.Errorf("Error invoking cpio: %v", err)
+			return fmt.Errorf("Error invoking cpio: %v, stderr: %s", err, stderrb.String())
 		}
 		err = rpm2cpio.Run()
 		if err != nil {
@@ -285,7 +289,7 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (e
 		}
 		err = cpio.Wait()
 		if err != nil {
-			return fmt.Errorf("Error waiting for cpio: %v", err)
+			return fmt.Errorf("Error waiting for cpio: %v, stderr: %s", err, stderrb.String())
 		}
 
 		for _, f := range gv.pkgs[i].manpageList {
