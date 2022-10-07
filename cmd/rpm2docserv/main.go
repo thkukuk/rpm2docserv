@@ -61,7 +61,7 @@ var (
 		"Forces all manpages to be re-rendered, even if they are up to date")
 
 
-	injectAssets = flag.String("inject-assets",
+	injectAssets = flag.String("assets",
 		"",
 		"If non-empty, a file system path to a directory containing assets to overwrite")
 

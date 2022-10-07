@@ -26,7 +26,7 @@ var (
 		"localhost:2431",
 		"host:port address to listen on")
 
-	injectAssets = flag.String("inject_assets",
+	injectAssets = flag.String("assets",
 		"",
 		"If non-empty, a file system path to a directory containing assets to overwrite")
 )

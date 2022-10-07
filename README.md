@@ -92,7 +92,7 @@ can be found in the corresponding directories: [nginx](nginx) and [apache](apach
 ## Customization
 
 A copy of the `assets/` directory can be created and modified. Start
-`rpm2docserv` with `-inject-assets` pointing to the new directory.
+`rpm2docserv` with `-assets` pointing to the new directory.
 Any files whose name does not end in .tmpl are treated as static files
 and will be placed in -serving-dir uncompressed.
 

@@ -42,7 +42,7 @@ func Inject(dir string) error {
 }
 
 // Asset returns either the bundled asset with the given name or the
-// injected version (see the -inject_assets flag).
+// injected version (see the -assets flag).
 func Asset(basename string) string {
 	return assets["assets/"+basename]
 }
