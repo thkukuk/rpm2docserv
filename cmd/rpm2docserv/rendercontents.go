@@ -47,8 +47,7 @@ func renderContents(dest, suite string, bins []string, gv globalView) error {
 			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
-				{fmt.Sprintf("/%s/index.html", suite), suite},
-				{"", "Contents"},
+				{"", suite},
 			},
 			Bins:           bins,
 			Suite:          suite,

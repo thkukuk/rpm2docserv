@@ -1,16 +1,27 @@
     </div>
-
-    <footer id="footer">
+  </main>
+  <footer class="footer">
+    <div class="container">
       {{ if ne .FooterExtra "" }}
       <p>{{ .FooterExtra }}</p>
       {{ else }}
       <p>Page last updated {{ Now }}</p>
       {{ end }}
       <hr>
-      <div id="fineprint">
-        <p>rpm2docserv {{ .Rpm2docservVersion }}, see <a href="https://github.com/thkukuk/rpm2docserv/">github.com/thkukuk/rpm2docserv</a></p>
+      <div class="d-flex justify-content-between">
+        <div class="footer-copyright">
+          © 2022 rpm2docserv contributors
+        </div>
+        <div class="list-inline">
+          <a class="list-inline-item" href="https://github.com/thkukuk/rpm2docserv/">
+            rpm2docserv {{ .Rpm2docservVersion }}
+          </a>
+          <a class="list-inline-item" href="https://github.com/thkukuk/rpm2docserv/blob/main/LICENSE">
+            License
+          </a>
+        </div>
       </div>
-    </footer>
-  </main>
+    </div>
+  </footer>
 </body>
 </html>

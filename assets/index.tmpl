@@ -2,8 +2,13 @@
 
 <div class="maincontents">
 
-{{ if .ProductUrl -}}
-<h1>{{ .ProductName }} Documentation Server</h1>
+{{ if .ProductName -}}
+<h1>
+  {{ if .LogoUrl -}}
+  <img src="{{ .LogoUrl }}" alt="Logo" width="48" height="48">
+  {{ end -}}
+  {{ .ProductName }} Documentation Server
+</h1>
 {{ else -}}
 <h1>Documentation Server</h1>
 {{ end -}}
@@ -15,10 +20,10 @@
 
 <ol>
   <li>
-    <form method="GET" action="{{ BaseURLPath }}/jump">
+    <form method="GET" action="{{ BaseURLPath }}/jump" class="form-inline">
       Directly jump to manpage:
-      <input type="text" name="q" autofocus="autofocus" placeholder="manpage name">
-      <input type="submit" value="Jump to manpage">
+      <input class="form-control mx-2" type="text" name="q" autofocus="autofocus" placeholder="manpage name">
+      <button class="btn btn-secondary" type="submit">Jump to manpage</button>
     </form>
   </li>
 
