@@ -281,7 +281,7 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (e
 		cpio.Stderr = &stderrb
 		err = cpio.Start()
 		if err != nil {
-			return fmt.Errorf("Error invoking cpio: %v, stderr: %s", err, stderrb.String())
+			return fmt.Errorf("Error invoking cpio (%s): %v, stderr: %s",  filepath.Base(gv.pkgs[i].filename), err, stderrb.String())
 		}
 		err = rpm2cpio.Run()
 		if err != nil {
@@ -289,7 +289,7 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (e
 		}
 		err = cpio.Wait()
 		if err != nil {
-			return fmt.Errorf("Error waiting for cpio: %v, stderr: %s", err, stderrb.String())
+			return fmt.Errorf("Error waiting for cpio (%s): %v, stderr: %s", filepath.Base(gv.pkgs[i].filename), err, stderrb.String())
 		}
 
 		for _, f := range gv.pkgs[i].manpageList {
