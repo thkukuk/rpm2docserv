@@ -83,6 +83,6 @@ func MustParseCommonTmpls() *template.Template {
 	t = template.Must(t.New("footer").Funcs(funcmap).Parse(bundled.Asset("footer.tmpl")))
 	t = template.Must(t.New("style").Funcs(funcmap).Parse(bundled.Asset("style.css")))
 	t = template.Must(t.New("chameleon").Funcs(funcmap).Parse(bundled.Asset("chameleon.css")))
-	t = template.Must(t.New("icon").Funcs(funcmap).Parse(bundled.Asset("fallback-icon.svg")))
+	t = template.Must(t.New("breadcrumb-icon").Funcs(funcmap).Parse(bundled.Asset("breadcrumb-icon.svg")))
 	return t
 }

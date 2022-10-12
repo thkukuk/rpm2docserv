@@ -119,12 +119,7 @@
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
       <a href="{{ BaseURLPath }}/">
-        {{ if .LogoUrl -}}
-        <img src="{{ .LogoUrl }}" alt="Logo" width="20" height="20">
-        {{ else -}}
-        {{ template "icon" . }}
-        {{ end -}}
-        {{ .ProductName }} Manuals
+        {{ template "breadcrumb-icon" . }} Manuals
       </a>
     </li>
     {{- range $i, $b := .Breadcrumbs }}
