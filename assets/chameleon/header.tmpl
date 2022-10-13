@@ -55,7 +55,10 @@
         {{ if .ProductUrl -}}
         <li class="nav-item">
           <a class="nav-link" href="{{ .ProductUrl }}">
-            {{ .ProductName }} Website
+            {{ if .LogoUrl -}}
+            <img src="{{ .LogoUrl }}" alt="Logo" width="24" height="24">
+            {{ end -}}
+            {{ .ProductName }}
           </a>
         </li>
 	{{ end -}}
