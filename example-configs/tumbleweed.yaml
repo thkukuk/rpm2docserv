@@ -1,6 +1,6 @@
 productname: openSUSE Tumbleweed
 producturl: https://www.opensuse.org
-logourl: https://www.opensuse.org/build/images/opensuse-logo.png
+logourl: logo.svg
 servingdir: /extern/docserv
 download: false
 products:
