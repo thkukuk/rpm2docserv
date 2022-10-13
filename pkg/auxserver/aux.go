@@ -97,6 +97,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				BestChoice     redirect.IndexEntry
 				Meta           *manpage.Meta
 				HrefLangs      []*manpage.Meta
+				Suites         []string
 			}{
 				Title:          "Not Found",
 				ProductName:    "",
