@@ -28,6 +28,7 @@ type Config struct {
 	ProductName string `yaml:"productname,omitempty"`
 	ProductUrl  string `yaml:"producturl,omitempty"`
 	LogoUrl     string `yaml:"logourl,omitempty"`
+	AssetsDir   string `yaml:"assets,omitempty"`
 	ServingDir  string `yaml:"servingdir"`
 	IndexPath   string `yaml:"auxindex"`
 	Download    string `yaml:"download"`
@@ -199,6 +200,9 @@ func main() {
 		config, err := read_yaml_config(*yamlConfig)
 		if err != nil {
 			log.Fatal(err)
+		}
+		if len(config.AssetsDir) > 0 {
+			injectAssets = &config.AssetsDir
 		}
 		if len(config.ServingDir) > 0 {
 			servingDir = &config.ServingDir
