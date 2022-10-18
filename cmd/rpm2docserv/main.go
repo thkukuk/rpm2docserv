@@ -32,6 +32,7 @@ type Config struct {
 	ServingDir  string `yaml:"servingdir"`
 	IndexPath   string `yaml:"auxindex"`
 	Download    string `yaml:"download"`
+	IsOffline   bool   `yaml:"offline,omitempty"`
 	Products    []Suites `yaml:"products"`
 	SortOrder   []string `yaml:"sortorder"`
 }
@@ -78,6 +79,7 @@ var (
 		false,
 		"Show rpm2docserv version and exit")
 
+	isOffline = false
 	productName string
         productUrl  string
 	logoUrl     string
@@ -226,6 +228,7 @@ func main() {
 			}
 		}
 
+		isOffline = config.IsOffline
 		productName = config.ProductName
 		productUrl = config.ProductUrl
 		logoUrl = config.LogoUrl

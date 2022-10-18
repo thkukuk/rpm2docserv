@@ -48,6 +48,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 			ProductUrl     string
 			LogoUrl        string
 			Rpm2docservVersion string
+			IsOffline      bool
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			First          *manpage.Meta
@@ -62,6 +63,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
+			IsOffline:      isOffline,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},
 				{"", first.Package.Binarypkg},
@@ -101,6 +103,7 @@ func renderSrcPkgindex(dest string, src string,
 			ProductName    string
 			ProductUrl     string
 			LogoUrl        string
+			IsOffline      bool
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -116,6 +119,7 @@ func renderSrcPkgindex(dest string, src string,
 			ProductName:    productName,
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
+			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},

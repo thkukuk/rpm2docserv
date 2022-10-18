@@ -198,6 +198,7 @@ type manpagePrepData struct {
 	ProductName    string
 	ProductUrl     string
 	LogoUrl        string
+	IsOffline      bool
 	Rpm2docservVersion string
 	Breadcrumbs    breadcrumbs
 	FooterExtra    template.HTML
@@ -425,6 +426,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		ProductName:    productName,
 		ProductUrl:     productUrl,
 		LogoUrl:        logoUrl,
+		IsOffline:      isOffline,
 		Rpm2docservVersion: rpm2docservVersion,
 		Breadcrumbs: breadcrumbs{
 			{fmt.Sprintf("/%s/index.html", meta.Package.Suite), meta.Package.Suite},

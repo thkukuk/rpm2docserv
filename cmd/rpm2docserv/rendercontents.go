@@ -33,6 +33,7 @@ func renderContents(dest, suite string, bins []string, gv globalView) error {
 			ProductUrl     string
 			LogoUrl        string
 			Rpm2docservVersion string
+			IsOffline      bool
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Bins           []string
@@ -45,6 +46,7 @@ func renderContents(dest, suite string, bins []string, gv globalView) error {
 			ProductName:    productName,
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
+			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
 				{"", suite},

@@ -58,6 +58,7 @@ func renderAux(destDir string, gv globalView) error {
 			ProductName    string
 			ProductUrl     string
 			LogoUrl        string
+			IsOffline      bool
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -70,6 +71,7 @@ func renderAux(destDir string, gv globalView) error {
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
 			Suites:         suites,
+			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
 	}); err != nil {
@@ -82,6 +84,7 @@ func renderAux(destDir string, gv globalView) error {
 			ProductName    string
 			ProductUrl     string
 			LogoUrl        string
+			IsOffline      bool
 			Rpm2docservVersion string
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
@@ -93,6 +96,7 @@ func renderAux(destDir string, gv globalView) error {
 			ProductName:    productName,
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
+			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 			Suites:         suites,
 		})

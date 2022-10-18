@@ -98,6 +98,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				Meta           *manpage.Meta
 				HrefLangs      []*manpage.Meta
 				Suites         []string
+				IsOffline      bool
 			}{
 				Title:          "Not Found",
 				ProductName:    "",
@@ -106,6 +107,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				Rpm2docservVersion: s.rpm2docservVersion,
 				Manpage:        nf.Manpage,
 				BestChoice:     nf.BestChoice,
+				IsOffline:      true,
 			})
 			if err == nil {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
