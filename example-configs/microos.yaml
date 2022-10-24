@@ -1,7 +1,9 @@
 productname: openSUSE MicroOS
 producturl: https://microos.opensuse.org
 logourl: https://microos.opensuse.org/assets/images/microos-logo.svg
+assets: rpm2docserv/assets/chameleon-microos
 download: true
+offline: true
 products:
   - name: openSUSE MicroOS
     cache:
