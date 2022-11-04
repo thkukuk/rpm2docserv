@@ -4,6 +4,55 @@
 
 <h1>About</h1>
 
+<p>
+  This site contains thousands of staticly generated manpages (as of writing
+  this, there are 111387 manpages for openSUSE Tumbleweed) which have been
+  extracted from openSUSE RPMs.
+  This service makes it possible to access and browse through manual pages
+  without the need to have access to a running system. Additional, not all
+  openSUSE products, like MicroOS, ship manual pages at all.
+</p>
+
+<h1>Service history</h1>
+
+<p>This service has been running as an official openSUSE service since
+  November 2022. The code base is mainly based
+  on <a href="https://github.com/Debian/debiman">debiman</a>, which major
+  rewrites to use a collection of RPMs as source.</p>
+
+<h1>Other sources</h1>
+
+<p>There are other sources for manpages online which you can use
+as alternatives to this service. These include:</p>
+
+<ul>
+  <li>Specific to some distributions or OS:</li>
+
+  <ul>
+    <li><a href="https://manpages.debian.org/">Debian Manpages repository</a>.</li>
+    <li><a href="https://manpages.ubuntu.com/">Ubuntu Manpage repository</a>.</li>
+    <li><a href="https://www.openbsd.org/cgi-bin/man.cgi">OpenBSD manual pages</a>.</li>
+    <li><a href="https://www.freebsd.org/cgi/man.cgi">FreeBSD manual pages</a>.</li>
+  </ul>
+
+  <li>Generic interfaces:</li>
+  <ul>
+    <li><a href="https://man7.org/linux/man-pages/">Michael Kerrisk's man-pages project</a>.</li>
+    <li><a href="https://linux.die.net/man/">http://linux.die.net/man/</a>.</li>
+    <li><a href="http://man.he.net/">Hurricane Electric Linux Man pages online</a>.</li>
+    <li><a href="https://www.unix.com/man-page/">UNIX.com forum manpages</a>.</li>
+  </ul>
+</ul>
+
+<p>
+  This manual pages repository was generated
+  by <a href="https://github.com/thkukuk/rpm2docserv">rpm2docserv</a>. If you
+  have any feedback, please file an issue in
+  the <a href="https://github.com/thkukuk/rpm2docserv/issues">rpm2docserv
+  issue tracker</a>.
+</p>
+
+
 </div>
 
 {{ template "footer" . }}
