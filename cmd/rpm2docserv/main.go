@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"net/http"
+	_ "net/http/pprof"
 
 	"gopkg.in/yaml.v3"
 
@@ -255,6 +257,8 @@ func main() {
 		manpageerrorTmpl = mustParseManpageerrorTmpl()
 		manpagefooterextraTmpl = mustParseManpagefooterextraTmpl()
 	}
+
+	go http.ListenAndServe("localhost:6060", nil)
 
 	// make sure the serving directory exists
 	if err := os.MkdirAll(*servingDir, os.ModePerm); err != nil {
