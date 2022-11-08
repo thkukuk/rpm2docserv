@@ -95,12 +95,3 @@ A copy of the `assets/` directory can be created and modified. Start
 `rpm2docserv` with `-assets` pointing to the new directory.
 Any files whose name does not end in .tmpl are treated as static files
 and will be placed in -serving-dir uncompressed.
-
-## TODO
-
-* not found template: generate a full file where only the name of the manual page
-  not found is missing, else we need to provide all variables via the auxserver.idx file
-  and blow that up.
-* Optimze speed when gathering RPMs
-* Broken manual pages are not rendered but still part of xref/auxserver
-* https://www.sitemaps.org/ - Write extra tool to create sitemaps.xml files. Since this files contain the hostname, but we want to be independ in a container, create this files on demand when starting the container
