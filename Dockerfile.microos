@@ -11,8 +11,8 @@ LABEL maintainer="Thorsten Kukuk <kukuk@thkukuk.de>"
 
 ARG BUILDTIME=
 ARG VERSION=unreleased
-LABEL org.opencontainers.image.title="openSUSE MicroOS Documentation Server"
-LABEL org.opencontainers.image.description="Manual pages and documentation to browse with a web server."
+LABEL org.opencontainers.image.title="openSUSE MicroOS Manpages Server"
+LABEL org.opencontainers.image.description="Manual pages to browse with a web server."
 LABEL org.opencontainers.image.created=$BUILDTIME
 LABEL org.opencontainers.image.version=$VERSION
 
