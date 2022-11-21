@@ -21,7 +21,7 @@ func tempDir(dest string) string {
 }
 
 func Atomically(dest string, compress bool, write func(w io.Writer) error) (err error) {
-	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
+	f, err := ioutil.TempFile(tempDir(dest), "docserv-")
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func Atomically(dest string, compress bool, write func(w io.Writer) error) (err 
 }
 
 func AtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) (err error) {
-	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
+	f, err := ioutil.TempFile(tempDir(dest), "docserv-")
 	if err != nil {
 		return err
 	}
