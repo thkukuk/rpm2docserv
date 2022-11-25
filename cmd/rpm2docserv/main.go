@@ -35,6 +35,7 @@ type Config struct {
 	IndexPath   string `yaml:"auxindex"`
 	Download    string `yaml:"download"`
 	IsOffline   bool   `yaml:"offline,omitempty"`
+	BaseUrl     string `yaml:"baseurl,omitempty"`
 	Products    []Suites `yaml:"products"`
 	SortOrder   []string `yaml:"sortorder"`
 }

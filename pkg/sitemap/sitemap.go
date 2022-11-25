@@ -40,14 +40,14 @@ func WriteTo(w io.Writer, baseUrl string, contents map[string]time.Time) error {
 	if err := enc.EncodeToken(start); err != nil {
 		return err
 	}
-	pkgs := make([]string, 0, len(contents))
-	for binarypkg := range contents {
-		pkgs = append(pkgs, binarypkg)
+	files := make([]string, 0, len(contents))
+	for entry := range contents {
+		files = append(files, entry)
 	}
-	sort.Strings(pkgs)
-	for _, binarypkg := range pkgs {
+	sort.Strings(files)
+	for _, binarypkg := range files {
 		if err := enc.EncodeElement(&url{
-			Loc:     fmt.Sprintf("%s/%s/index.html", baseUrl, binarypkg),
+			Loc:     fmt.Sprintf("%s/%s", baseUrl, binarypkg),
 			Lastmod: contents[binarypkg].Format(sitemapDateFormat),
 		}, xml.StartElement{Name: xml.Name{Local: "url"}}); err != nil {
 			return err
@@ -85,7 +85,7 @@ func WriteIndexTo(w io.Writer, baseUrl string, contents map[string]time.Time) er
 	sort.Strings(pkgs)
 	for _, suite := range pkgs {
 		if err := enc.EncodeElement(&sitemap{
-			Loc:     fmt.Sprintf("%s/%s/sitemap.xml.gz", baseUrl, suite),
+			Loc:     fmt.Sprintf("%s/%s", baseUrl, suite),
 			Lastmod: contents[suite].Format(sitemapDateFormat),
 		}, xml.StartElement{Name: xml.Name{Local: "sitemap"}}); err != nil {
 			return err
