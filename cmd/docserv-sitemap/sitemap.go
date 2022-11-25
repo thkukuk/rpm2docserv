@@ -116,7 +116,16 @@ func main() {
 
 func collectFiles(basedir string, dir string, sitemapEntries map[string]time.Time) error {
 
-	fn := filepath.Join(basedir, dir)
+	var fn string
+	var fp string // prefix with directory and "/" if dir is not empty
+
+	if len(dir) > 0 {
+		fn = filepath.Join(basedir, dir)
+		fp = dir + "/"
+	} else {
+		fn = basedir
+		fp = ""
+	}
 	entries, err := ioutil.ReadDir (fn)
 	if err != nil {
 		return fmt.Errorf("Cannot open %v: %v", fn, err)
@@ -124,21 +133,93 @@ func collectFiles(basedir string, dir string, sitemapEntries map[string]time.Tim
 
 	for _, bfn := range entries {
 		if bfn.IsDir() ||
-			bfn.Name() == "sitemap.xml.gz" {
+			(strings.HasPrefix(bfn.Name(), "sitemap") &&
+			strings.HasSuffix(bfn.Name(), ".xml.gz")) {
 			continue
 		}
 
 		n := strings.TrimSuffix(bfn.Name(), ".gz")
 
 		if filepath.Ext(n) == ".html" && !bfn.ModTime().IsZero() {
-			sitemapEntries[dir + "/" + n] = bfn.ModTime()
+			sitemapEntries[fp + n] = bfn.ModTime()
 		}
 	}
 	return nil
 }
 
+func writeSitemap(basedir string, suite string, baseUrl string,
+	          sitemapEntries map[string]time.Time, sitemaps map[string]time.Time) error {
+
+	escapedUrlPath := &url.URL{Path: suite}
+	if *verbose {
+		log.Printf("Found %d entries for %s/%s", len(sitemapEntries), basedir, escapedUrlPath)
+	}
+
+	// Split sitemapEntries in smaller chunks
+	// Google has a limit of 50.000 entries per file
+	count := 0
+	chunkSize := 45000
+	batchKeys := make([]string, 0, chunkSize)
+	saveChunks := func() error {
+		chunk := make(map[string]time.Time, len(batchKeys))
+		for _, v := range batchKeys {
+			chunk[v] = sitemapEntries[v]
+		}
+		batchKeys = batchKeys[:0]
+
+		sitemapPath := filepath.Join(basedir, suite, "sitemap" + strconv.Itoa(count) + ".xml.gz")
+		if *verbose {
+			log.Printf("Writing %d entries to %s", len(chunk), sitemapPath)
+		}
+
+		urlPrefix := baseUrl
+		if len(escapedUrlPath.String()) > 0 {
+			urlPrefix = urlPrefix + "/" + escapedUrlPath.String()
+		}
+		if err := write.Atomically(sitemapPath, true, func(w io.Writer) error {
+			return sitemap.WriteTo(w, urlPrefix, chunk)
+		}); err != nil {
+			return fmt.Errorf("Write sitemap for %v failed: %v", suite, err)
+		}
+		st, err := os.Stat(sitemapPath)
+		if err == nil {
+			sitemaps[escapedUrlPath.String() + "/sitemap" + strconv.Itoa(count) + ".xml"] = st.ModTime()
+		}
+		count++
+
+		return nil
+	}
+
+	for k := range sitemapEntries {
+		batchKeys = append(batchKeys, k)
+		if len(batchKeys) == chunkSize {
+			err := saveChunks()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Process last, potentially incomplete batch
+	if len(batchKeys) > 0 {
+		err := saveChunks()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func walkDirs(dir string, baseURL string) error {
 	sitemaps := make(map[string]time.Time)
+
+	/* Collect files in root directory */
+	sitemapRootEntries := make(map[string]time.Time, 10)
+	collectFiles(dir, "", sitemapRootEntries)
+	err := writeSitemap(dir, "", baseURL, sitemapRootEntries, sitemaps)
+	if err != nil {
+		return err
+	}
 
 	suitedirs, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -146,6 +227,7 @@ func walkDirs(dir string, baseURL string) error {
 	}
 	for _, sfi := range suitedirs {
 		if !sfi.IsDir() {
+
 			continue
 		}
 
@@ -153,9 +235,9 @@ func walkDirs(dir string, baseURL string) error {
 			log.Printf("Searching in \"%v\"...", sfi.Name())
 		}
 
-		// openSUSE Tumbleweed has ~11000 package entries, 120000 should
+		// openSUSE Tumbleweed has ~11000 package entries, 140000 should
 		// be good enough as start
-		sitemapEntries := make(map[string]time.Time, 120000)
+		sitemapEntries := make(map[string]time.Time, 140000)
 
 		fn := filepath.Join(*servingDir, sfi.Name())
 		entrydirs, err := ioutil.ReadDir (fn)
@@ -164,7 +246,9 @@ func walkDirs(dir string, baseURL string) error {
 		}
 
 		for _, bfn := range entrydirs {
-			if bfn.Name() == "sitemap.xml.gz" {
+			// Ignore all sitemap*.xml.gz files
+			if strings.HasPrefix(bfn.Name(), "sitemap") &&
+				strings.HasSuffix(bfn.Name(), ".xml.gz") {
 				continue
 			}
 
@@ -178,58 +262,11 @@ func walkDirs(dir string, baseURL string) error {
 
 		}
 
-
-		escapedUrlPath := &url.URL{Path: sfi.Name()}
-		if *verbose {
-			log.Printf("Writing %d entries to %s/%s", len(sitemapEntries), dir, escapedUrlPath)
+		err = writeSitemap(dir, sfi.Name(), baseURL, sitemapEntries, sitemaps)
+		if err != nil {
+			return err
 		}
 
-		// Split sitemapEntries in smaller chunks
-		// Google has a limit of 50.000 entries per file
-		count := 0
-		chunkSize := 45000
-		batchKeys := make([]string, 0, chunkSize)
-		saveChunks := func() error {
-			chunk := make(map[string]time.Time, len(batchKeys))
-			for _, v := range batchKeys {
-				chunk[v] = sitemapEntries[v]
-			}
-			batchKeys = batchKeys[:0]
-
-			sitemapPath := filepath.Join(dir, sfi.Name(), "sitemap" + strconv.Itoa(count) + ".xml.gz")
-			if *verbose {
-				log.Printf("Writing %d entries to %s", len(chunk), sitemapPath)
-			}
-			if err := write.Atomically(sitemapPath, true, func(w io.Writer) error {
-				return sitemap.WriteTo(w, baseURL+"/" + escapedUrlPath.String(), chunk)
-			}); err != nil {
-				return fmt.Errorf("Write sitemap for %v failed: %v", sfi.Name(), err)
-			}
-			st, err := os.Stat(sitemapPath)
-			if err == nil {
-				sitemaps[escapedUrlPath.String() + "/sitemap" + strconv.Itoa(count) + ".xml"] = st.ModTime()
-			}
-			count++
-
-			return nil
-		}
-
-		for k := range sitemapEntries {
-			batchKeys = append(batchKeys, k)
-			if len(batchKeys) == chunkSize {
-				err = saveChunks()
-				if err != nil {
-					return err
-				}
-			}
-		}
-		// Process last, potentially incomplete batch
-		if len(batchKeys) > 0 {
-			err = saveChunks()
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	if *verbose {
