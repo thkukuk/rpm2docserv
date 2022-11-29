@@ -45,7 +45,7 @@ type breadcrumb struct {
 
 type breadcrumbs []breadcrumb
 
-func (b breadcrumbs) ToJSON() template.HTML {
+func (b breadcrumbs) ToJSON() template.JS {
 	type item struct {
 		Type string `json:"@type"`
 		ID   string `json:"@id"`
@@ -77,11 +77,13 @@ func (b breadcrumbs) ToJSON() template.HTML {
 			},
 		}
 	}
+
 	jsonb, err := json.Marshal(l)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return template.HTML(jsonb)
+
+	return template.JS(jsonb)
 }
 
 var commonTmpls = commontmpl.MustParseCommonTmpls()
