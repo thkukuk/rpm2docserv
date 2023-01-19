@@ -106,6 +106,11 @@ func main() {
 		log.Fatal("Usage: docserv-sitemap --base-url=<URL> [--serving-dir=<dir>]")
 	}
 
+	if (*baseURL)[len(*baseURL)-1:] == "/" {
+		t := (*baseURL)[:len(*baseURL)-1]
+		baseURL = &t
+	}
+
 	log.Printf("docserv sitemap generation for %q", *servingDir)
 
 	err := walkDirs(*servingDir, *baseURL)
@@ -141,7 +146,12 @@ func collectFiles(basedir string, dir string, sitemapEntries map[string]time.Tim
 		n := strings.TrimSuffix(bfn.Name(), ".gz")
 
 		if filepath.Ext(n) == ".html" && !bfn.ModTime().IsZero() {
-			sitemapEntries[fp + n] = bfn.ModTime()
+			// For index.html only add the directory URL
+			if n == "index.html" {
+				sitemapEntries[fp] = bfn.ModTime()
+			} else {
+				sitemapEntries[fp + n] = bfn.ModTime()
+			}
 		}
 	}
 	return nil
@@ -183,7 +193,8 @@ func writeSitemap(basedir string, suite string, baseUrl string,
 		}
 		st, err := os.Stat(sitemapPath)
 		if err == nil {
-			sitemaps[escapedUrlPath.String() + "/sitemap" + strconv.Itoa(count) + ".xml"] = st.ModTime()
+			fn := filepath.Join(escapedUrlPath.String(), "sitemap" + strconv.Itoa(count) + ".xml")
+			sitemaps[fn] = st.ModTime()
 		}
 		count++
 
@@ -227,7 +238,6 @@ func walkDirs(dir string, baseURL string) error {
 	}
 	for _, sfi := range suitedirs {
 		if !sfi.IsDir() {
-
 			continue
 		}
 
@@ -256,7 +266,11 @@ func walkDirs(dir string, baseURL string) error {
 				if bfn.IsDir() {
 					collectFiles(fn, bfn.Name(), sitemapEntries)
 				} else {
-					sitemapEntries[bfn.Name()] = bfn.ModTime()
+					if bfn.Name() == "index.html" {
+						sitemapEntries[""] = bfn.ModTime()
+					} else {
+						sitemapEntries[bfn.Name()] = bfn.ModTime()
+					}
 				}
 			}
 
