@@ -41,7 +41,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 	}
 	sort.Stable(bySuiteStr(suites))
 
-	return write.Atomically(dest, true, func(w io.Writer) error {
+	return write.Atomically(dest, false, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title          string
 			ProductName    string
@@ -97,7 +97,7 @@ func renderSrcPkgindex(dest string, src string,
 	}
 	sort.Stable(bySuiteStr(suites))
 
-	return write.Atomically(dest, true, func(w io.Writer) error {
+	return write.Atomically(dest, false, func(w io.Writer) error {
 		return srcpkgindexTmpl.Execute(w, struct {
 			Title          string
 			ProductName    string

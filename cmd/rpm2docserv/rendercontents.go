@@ -26,7 +26,7 @@ func renderContents(dest, suite string, bins []string, gv globalView) error {
 	}
 	sort.Stable(bySuiteStr(suites))
 
-	if err := write.Atomically(dest, true, func(w io.Writer) error {
+	if err := write.Atomically(dest, false, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
 			ProductName    string

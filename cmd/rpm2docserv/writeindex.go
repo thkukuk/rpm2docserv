@@ -10,7 +10,7 @@ import (
 )
 
 // writeIndex serializes an index for the redirect package (used in
-// debiman-auxserver) to dest.
+// docserv-auxserver) to dest.
 func writeIndex(dest string, gv globalView) error {
 	idx := &pb.Index{
 		Entry: make([]*pb.IndexEntry, 0, len(gv.xref)),

@@ -61,11 +61,6 @@ var (
 		"",
 		"Configuration file in yaml format")
 
-	forceRerender = flag.Bool("force_rerender",
-		true,
-		"Forces all manpages to be re-rendered, even if they are up to date")
-
-
 	injectAssets = flag.String("assets",
 		"",
 		"If non-empty, a file system path to a directory containing assets to overwrite")

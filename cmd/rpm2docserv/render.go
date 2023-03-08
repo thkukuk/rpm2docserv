@@ -154,11 +154,6 @@ func listManpages(dir string) (map[string]*manpage.Meta, error) {
 }
 
 func renderDirectoryIndex(dir string, newestModTime time.Time, gv globalView) error {
-	st, err := os.Stat(filepath.Join(dir, "index.html.gz"))
-	if !*forceRerender && err == nil && st.ModTime().After(newestModTime) {
-		return nil
-	}
-
 	manpageByName, err := listManpages(dir)
 	if err != nil {
 		return err
@@ -169,7 +164,7 @@ func renderDirectoryIndex(dir string, newestModTime time.Time, gv globalView) er
 		return nil
 	}
 
-	return renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName, gv)
+	return renderPkgindex(filepath.Join(dir, "index.html"), manpageByName, gv)
 }
 
 // walkManContents walks over all entries in dir and, depending on mode, does:
@@ -237,84 +232,36 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 				continue
 			}
 
-			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
-			htmlst, err := os.Stat(filepath.Join(dir, n))
-			if err == nil {
-				atomic.AddUint64(&gv.stats.HTMLBytes, uint64(htmlst.Size()))
+			m, err := manpage.FromServingPath(*servingDir, full)
+			if err != nil {
+				// If we run into this case, our code cannot correctly
+				// interpret the result of ServingPath().
+				log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
+				continue
 			}
-			if err != nil || *forceRerender || htmlst.ModTime().Before(st.ModTime()) {
-				m, err := manpage.FromServingPath(*servingDir, full)
-				if err != nil {
-					// If we run into this case, our code cannot correctly
-					// interpret the result of ServingPath().
-					log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
-					continue
+
+			versions := gv.xref[m.Name]
+			// Replace m with its corresponding entry in versions
+			// so that rendermanpage() can use pointer equality to
+			// efficiently skip entries.
+			for _, v := range versions {
+				if v.ServingPath() == m.ServingPath() {
+					m = v
+					break
 				}
+			}
 
-				versions := gv.xref[m.Name]
-				// Replace m with its corresponding entry in versions
-				// so that rendermanpage() can use pointer equality to
-				// efficiently skip entries.
-				for _, v := range versions {
-					if v.ServingPath() == m.ServingPath() {
-						m = v
-						break
-					}
+			var reuse string
+			if symlink {
+				link, err := os.Readlink(full)
+				if err == nil {
+					resolved := filepath.Join(dir, link)
+					reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
 				}
+			}
 
-				// Render dependent manpages first to properly resume
-				// in case debiman is interrupted.
-				for _, v := range versions {
-					if v == m || *forceRerender {
-						continue
-					}
-
-					vfull := filepath.Join(*servingDir, v.RawPath())
-					vfn := filepath.Join(*servingDir, v.ServingPath()+".html.gz")
-					vhtmlst, err := os.Stat(vfn)
-					if err == nil && vhtmlst.ModTime().After(gv.start) {
-						// The variant was already re-rendered with this globalView.
-						continue
-					}
-
-					vst, err := os.Stat(vfull)
-					if err != nil {
-						log.Printf("WARNING: stat %q: %v", vfull, err)
-						continue
-					}
-
-					vreuse := ""
-					if vhtmlst != nil && vhtmlst.ModTime().After(vst.ModTime()) {
-						vreuse = vfn
-					}
-
-					log.Printf("%s invalidated by %s", vfn, full)
-
-					select {
-					case renderChan <- renderJob{
-						dest:     vfn,
-						src:      vfull,
-						meta:     v,
-						versions: versions,
-						xref:     gv.xref,
-						modTime:  vst.ModTime(),
-						reuse:    vreuse,
-					}:
-					case <-ctx.Done():
-						break
-					}
-				}
-
-				var reuse string
-				if symlink {
-					link, err := os.Readlink(full)
-					if err == nil {
-						resolved := filepath.Join(dir, link)
-						reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
-					}
-				}
-
-				select {
+			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
+			select {
 				case renderChan <- renderJob{
 					dest:     filepath.Join(dir, n),
 					src:      full,
@@ -324,9 +271,8 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 					modTime:  st.ModTime(),
 					reuse:    reuse,
 				}:
-				case <-ctx.Done():
-					break
-				}
+			case <-ctx.Done():
+				break
 			}
 		}
 	}
@@ -366,6 +312,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 			var wg errgroup.Group
 			for _, bfn := range names {
 				if bfn == "sourcesWithManpages.txt.gz" ||
+					bfn == "idex.html" ||
 					bfn == "index.html.gz" ||
 					bfn == "sitemap.xml.gz" ||
 					bfn == ".nobackup" {
@@ -422,11 +369,6 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 
 		for src, binaries := range binariesBySource {
 			srcDir := filepath.Join(*servingDir, suite, "src:"+src)
-			// skip if current index file is more recent than newestForSource
-			st, err := os.Stat(filepath.Join(srcDir, "index.html.gz"))
-			if !*forceRerender && err == nil && st.ModTime().After(newestForSource[src]) {
-				continue
-			}
 
 			// Aggregate manpages of all binary packages for this source package
 			manpages := make(map[string]*manpage.Meta)
@@ -449,7 +391,7 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 			if err := os.MkdirAll(srcDir, 0755); err != nil {
 				return err
 			}
-			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html.gz"), src, manpages, gv); err != nil {
+			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html"), src, manpages, gv); err != nil {
 				return err
 			}
 		}
@@ -536,7 +478,7 @@ func renderAll(gv globalView) error {
 			return err
 		}
 
-		if err := renderContents(filepath.Join(*servingDir, sfi.Name(), "index.html.gz",), sfi.Name(), names, gv); err != nil {
+		if err := renderContents(filepath.Join(*servingDir, sfi.Name(), "index.html",), sfi.Name(), names, gv); err != nil {
 			return err
 		}
 

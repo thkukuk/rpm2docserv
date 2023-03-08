@@ -52,7 +52,7 @@ func renderAux(destDir string, gv globalView) error {
 	}
 	sort.Stable(bySuiteStr(suites))
 
-	if err := write.Atomically(filepath.Join(destDir, "index.html.gz"), true, func(w io.Writer) error {
+	if err := write.Atomically(filepath.Join(destDir, "index.html"), false, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {
 			Title          string
 			ProductName    string
