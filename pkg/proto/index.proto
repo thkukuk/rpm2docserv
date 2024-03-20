@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option go_package = "github.com/thkukuk/rpm2docserv/pkg/proto";
+
 package proto;
 
 message IndexEntry {

@@ -11,7 +11,7 @@ import (
 
 	pb "github.com/thkukuk/rpm2docserv/pkg/proto"
 	"github.com/thkukuk/rpm2docserv/pkg/tag"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"golang.org/x/text/language"
 )
 

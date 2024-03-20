@@ -6,7 +6,7 @@ import (
 
 	pb "github.com/thkukuk/rpm2docserv/pkg/proto"
 	"github.com/thkukuk/rpm2docserv/pkg/write"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 // writeIndex serializes an index for the redirect package (used in

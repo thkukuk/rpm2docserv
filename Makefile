@@ -22,7 +22,7 @@ vendor: dep ## Create vendor directory
 
 api: ## Auto-generate grpc go sources
 	@protoc -I pkg/proto/ \
-		--go_out=plugins=grpc:pkg/proto \
+		--go_out=pkg/proto \
 		pkg/proto/index.proto
 
 bundle: ## Generate embedded files
