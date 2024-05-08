@@ -15,7 +15,7 @@ if [ ! -f "$CRT" ] && [ ! -f "$KEY" ]; then
     SSL_CA_CSR_COUNTRY=${SSL_CA_CSR_COUNTRY:-"DE"}
     SSL_CA_CSR_STATE=${SSL_CA_CSR_STATE:-"Bavaria"}
     SSL_CA_CSR_ORGANIZATION_UNIT=${SSL_CA_CSR_ORGANIZATION_UNIT:-"Dummy CA"}
-    SSL_CA_CSR_CN=${SSL_CA_CSR_CN:-"$(hostname -f)"}
+    SSL_CA_CSR_CN=${SSL_CA_CSR_CN:-"$HOSTNAME"}
     SSL_ORGANIZATION_UNIT=${SSL_ORGANIZATION_UNIT:-"Server Certificate"}
 
     mkdir -p "$(dirname "$CRT")"
