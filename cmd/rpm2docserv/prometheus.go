@@ -7,34 +7,34 @@ import (
 )
 
 const metricsTmplContent = `
-# HELP packages_total The total number of binary packages processed.
-# TYPE packages_total gauge
-packages_total {{ .Packages }}
+# HELP rpm2docserv_packages_total The total number of binary packages processed.
+# TYPE rpm2docserv_packages_total gauge
+rpm2docserv_packages_total {{ .Packages }}
 
-# HELP packages_extracted Number of binary packages from which manpages were extracted.
-# TYPE packages_extracted gauge
-packages_extracted {{ .Stats.PackagesExtracted }}
+# HELP rpm2docserv_packages_extracted Number of binary packages from which manpages were extracted.
+# TYPE rpm2docserv_packages_extracted gauge
+rpm2docserv_packages_extracted {{ .Stats.PackagesExtracted }}
 
-# HELP manpages_rendered Number of manpages rendered to HTML
-# TYPE manpages_rendered gauge
-manpages_rendered {{ .Stats.ManpagesRendered }}
+# HELP rpm2docserv_manpages_rendered Number of manpages rendered to HTML
+# TYPE rpm2docserv_manpages_rendered gauge
+rpm2docserv_manpages_rendered {{ .Stats.ManpagesRendered }}
 
-# HELP manpage_bytes Total number of bytes used by manpages (by format).
-# TYPE manpage_bytes gauge
-manpage_bytes{format="man"} {{ .Stats.ManpageBytes }}
-manpage_bytes{format="html"} {{ .Stats.HTMLBytes }}
+# HELP rpm2docserv_manpage_bytes Total number of bytes used by manpages (by format).
+# TYPE rpm2docserv_manpage_bytes gauge
+rpm2docserv_manpage_bytes{format="man"} {{ .Stats.ManpageBytes }}
+rpm2docserv_manpage_bytes{format="html"} {{ .Stats.HTMLBytes }}
 
-# HELP index_bytes Total number of bytes used for the auxserver index.
-# TYPE index_bytes gauge
-index_bytes {{ .Stats.IndexBytes }}
+# HELP rpm2docserv_index_bytes Total number of bytes used for the auxserver index.
+# TYPE rpm2docserv_index_bytes gauge
+rpm2docserv_index_bytes {{ .Stats.IndexBytes }}
 
-# HELP runtime Wall-clock runtime in seconds.
-# TYPE runtime gauge
-runtime {{ .Seconds }}
+# HELP rpm2docserv_runtime Wall-clock runtime in seconds.
+# TYPE rpm2docserv_runtime gauge
+rpm2docserv_runtime {{ .Seconds }}
 
-# HELP last_successful_run Last successful run in seconds since the epoch.
-# TYPE last_successful_run gauge
-last_successful_run {{ .LastSuccessfulRun }}
+# HELP rpm2docserv_last_successful_run Last successful run in seconds since the epoch.
+# TYPE rpm2docserv_last_successful_run gauge
+rpm2docserv_last_successful_run {{ .LastSuccessfulRun }}
 `
 
 var metricsTmpl = template.Must(template.New("metrics").Parse(metricsTmplContent))
