@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -282,7 +281,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 
 func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalView) error {
 
-	suitedirs, err := ioutil.ReadDir(*servingDir)
+	suitedirs, err := os.ReadDir(*servingDir)
 	if err != nil {
 		return err
 	}
@@ -456,7 +455,7 @@ func renderAll(gv globalView) error {
 		return fmt.Errorf("writing source index: %v", err)
 	}
 
-	suitedirs, err := ioutil.ReadDir(*servingDir)
+	suitedirs, err := os.ReadDir(*servingDir)
 	if err != nil {
 		return err
 	}

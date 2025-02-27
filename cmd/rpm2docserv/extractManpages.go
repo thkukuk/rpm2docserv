@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -330,7 +329,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
 
 	var missing []*manLinks
 
-	tmpdir, err := ioutil.TempDir(servingDir, "collect-")
+	tmpdir, err := os.MkdirTemp(servingDir, "collect-")
 	if err != nil {
 		log.Fatal(err)
 	}

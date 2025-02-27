@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -15,7 +14,7 @@ import (
 )
 
 func diff(got, want string) ([]byte, error) {
-	gf, err := ioutil.TempFile("", "debiman-")
+	gf, err := os.CreateTemp("", "debiman-")
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +26,7 @@ func diff(got, want string) ([]byte, error) {
 	}
 	defer os.Remove(gf.Name())
 
-	wf, err := ioutil.TempFile("", "debiman-")
+	wf, err := os.CreateTemp("", "debiman-")
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +75,7 @@ func TestToHTML(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			b, err := ioutil.ReadFile("../../testdata/" + d + ".html")
+			b, err := os.ReadFile("../../testdata/" + d + ".html")
 			if err != nil {
 				t.Fatal(err)
 			}

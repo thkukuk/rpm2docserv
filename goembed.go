@@ -12,7 +12,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"text/template"
@@ -63,7 +62,7 @@ func oneVar(varName, filename string) error {
 }
 
 func oneVarReader(varName string, r io.Reader) error {
-	raw, err := ioutil.ReadAll(r)
+	raw, err := io.ReadAll(r)
 	if err != nil {
 		return err
 	}
@@ -103,7 +102,6 @@ var gzipPrologue = template.Must(template.New("").Parse(`
 import (
 	"bytes"
 	"compress/gzip"
-	"io/ioutil"
 )
 func init() {
 	r, err := gzip.NewReader(bytes.NewReader({{.}}_gzip))
@@ -111,7 +109,7 @@ func init() {
 		panic(err)
 	}
 	defer r.Close()
-	{{.}}, err = ioutil.ReadAll(r)
+	{{.}}, err = io.ReadAll(r)
 	if err != nil {
 		panic(err)
 	}

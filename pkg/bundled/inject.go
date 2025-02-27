@@ -1,7 +1,6 @@
 package bundled
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,7 +26,7 @@ func Inject(dir string) error {
 		}
 		fn := fi.Name()
 		path := filepath.Join(dir, fn)
-		b, err := ioutil.ReadFile(path)
+		b, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}

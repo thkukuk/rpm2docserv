@@ -2,10 +2,10 @@ package redirect
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
+	"os"
 	"sort"
 	"strings"
 
@@ -432,10 +432,11 @@ func IndexFromProto(path string) (Index, error) {
 		Sections: make(map[string]bool),
 		Suites:   make(map[string]string),
 	}
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return index, err
 	}
+
 	var idx pb.Index
 	if err := proto.Unmarshal(b, &idx); err != nil {
 		return index, err

@@ -49,6 +49,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Loaded %d manpage entries, %d suites, %d languages from index %q",
+		len(idx.Entries), len(idx.Suites), len(idx.Langs), *indexPath)
 
 	commonTmpls := commontmpl.MustParseCommonTmpls()
 	notFoundTmpl := template.Must(commonTmpls.New("notfound").Parse(bundled.Asset("notfound.tmpl")))
@@ -90,9 +92,6 @@ func main() {
 	mux.HandleFunc("/suggest", server.HandleSuggest)
 	mux.HandleFunc("/", server.HandleRedirect)
 	http.Handle("/", http.StripPrefix(basePath, mux))
-
-	log.Printf("Loaded %d manpage entries, %d suites, %d languages from index %q",
-		len(idx.Entries), len(idx.Suites), len(idx.Langs), *indexPath)
 
 	log.Printf("Starting HTTP listener on %q", *listenAddr)
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))

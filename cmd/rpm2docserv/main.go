@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -171,7 +170,7 @@ func read_yaml_config(conffile string) (Config, error) {
 
 	var config Config
 
-	file, err := ioutil.ReadFile(conffile)
+	file, err := os.ReadFile(conffile)
 	if err != nil {
 		return config, fmt.Errorf("Cannot read %q: %v", conffile, err)
 	}
