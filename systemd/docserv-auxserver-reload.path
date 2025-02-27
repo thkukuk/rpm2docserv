@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch for changes in docserv auxserver.idx
+After=local-fs.target
+
+[Path]
+PathChanged=/srv/docserv/auxserver.idx
+
+[Install]
+WantedBy=default.target
+
