@@ -5,6 +5,3 @@ Wants=local-fs.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/killall -s SIGHUP docserv-auxserver
-
-[Install]
-WantedBy=default.target
