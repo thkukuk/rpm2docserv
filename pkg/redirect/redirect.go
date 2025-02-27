@@ -382,8 +382,6 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		suite = rewrite
 	}
 
-	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
-
 	lname := strings.ToLower(name)
 	entries, ok := i.Entries[lname]
 	if !ok {
@@ -393,10 +391,14 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		if !ok {
 			entries, ok = i.Entries[strings.Replace(lname, ".", "_", -1)]
 			if !ok {
+				log.Printf("Not found: Url %q, path %q", r.URL.Path, path)
 				return "", &NotFoundError{Manpage: name}
 			}
 		}
 	}
+
+	log.Printf("Query %q, path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", r.URL.Path, path, suite, binarypkg, name, section, lang)
+
 
 	acceptLang := r.Header.Get("Accept-Language")
 	ref := IndexEntry{
@@ -418,10 +420,13 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		if name != "index" && name != "favicon" {
 			best = i.Narrow(acceptLang, IndexEntry{}, ref, entries)[0]
 		}
+		log.Printf("Not found: Url %q, suggesting %q", r.URL.Path, best)
+
 		return "", &NotFoundError{
 			Manpage:    name,
 			BestChoice: best}
 	}
+	log.Printf("Found: Query %q -> Url %q", r.URL.Path, filtered[0].ServingPath(suffix))
 
 	return filtered[0].ServingPath(suffix), nil
 }
