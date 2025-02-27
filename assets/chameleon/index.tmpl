@@ -44,7 +44,11 @@
     <ul>
       {{ range $idx, $suite := .Suites }}
       <li>
+{{- if eq $suite "Tumbleweed" }}
+       <a href="{{ BaseURLPath }}/{{ $suite }}/index.html">Tumbleweed &amp; MicroOS</a>
+{{ else -}}
        <a href="{{ BaseURLPath }}/{{ $suite }}/index.html">{{ $suite }}</a>
+{{ end -}}
       </li>
       {{ end }}
     </ul>
