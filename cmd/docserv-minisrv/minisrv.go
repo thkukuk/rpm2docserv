@@ -81,7 +81,8 @@ func serveFile(w http.ResponseWriter, r *http.Request) error {
 func main() {
 	flag.Parse()
 
-	idx, err := redirect.IndexFromProto(filepath.Join(*servingDir, "auxserver.idx"))
+	// XXX Make auxserver.idx command line option
+	idx, err := redirect.IndexFromProto([]string{filepath.Join(*servingDir, "auxserver.idx")})
 	if err != nil {
 		log.Fatalf("Could not load auxserver index: %v", err)
 	}

@@ -431,21 +431,26 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	return filtered[0].ServingPath(suffix), nil
 }
 
-func IndexFromProto(path string) (Index, error) {
+func IndexFromProto(paths []string) (Index, error) {
 	index := Index{
 		Langs:    make(map[string]bool),
 		Sections: make(map[string]bool),
 		Suites:   make(map[string]string),
 	}
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return index, err
+	var idx pb.Index
+
+	for _, path := range paths {
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return index, err
+		}
+
+		err = proto.UnmarshalOptions{Merge: true}.Unmarshal(b, &idx)
+		if err != nil {
+			return index, err
+		}
 	}
 
-	var idx pb.Index
-	if err := proto.Unmarshal(b, &idx); err != nil {
-		return index, err
-	}
 	index.Entries = make(map[string][]IndexEntry, len(idx.Entry))
 	for _, e := range idx.Entry {
 		name := strings.ToLower(e.Name)
