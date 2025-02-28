@@ -1,6 +1,8 @@
 module github.com/thkukuk/rpm2docserv
 
-go 1.21
+go 1.23.0
+
+toolchain go1.24.0
 
 require (
 	github.com/knqyf263/go-rpm-version v0.0.0-20240918084003-2afd7dc6a38f
@@ -10,4 +12,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require google.golang.org/protobuf v1.36.5
+require (
+	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
+	google.golang.org/protobuf v1.36.5
+)
