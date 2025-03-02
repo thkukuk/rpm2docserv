@@ -13,6 +13,6 @@ require (
 )
 
 require (
-	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
+	golang.org/x/exp v0.0.0-20250228200357-dead58393ab7
 	google.golang.org/protobuf v1.36.5
 )
