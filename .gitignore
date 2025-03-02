@@ -6,3 +6,4 @@ bin
 RPMs
 docserv
 rpm2docserv-*.tar.xz
+pkg/bundled/GENERATED_bundled.go
