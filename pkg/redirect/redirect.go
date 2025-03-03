@@ -13,6 +13,7 @@ import (
 	"github.com/thkukuk/rpm2docserv/pkg/tag"
 	"google.golang.org/protobuf/proto"
 	"golang.org/x/text/language"
+	//"golang.org/x/text/language/display"
 )
 
 type IndexEntry struct {
@@ -34,22 +35,8 @@ type Index struct {
 	Sections map[string]bool
 }
 
-// XXX should not be a compile time target...
-const defaultSuite = "manpages"
-const defaultLanguage = "en"
-
-// bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
+// XXX bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
 func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
-	// ensure that en comes first, so that language.Matcher treats it as default
-	if options[0].Language != "en" {
-		for i := 1; i < len(options); i++ {
-			if options[i].Language == "en" {
-				options = append([]IndexEntry{options[i]}, options...)
-				break
-			}
-		}
-	}
-
 	if t == nil {
 		return options[0]
 	}
@@ -64,11 +51,11 @@ func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 	}
 
 	matcher := language.NewMatcher(tags)
-	tag, _, _ := matcher.Match(t...)
-	for idx, t := range tags {
-		if t == tag {
-			return options[idx]
-		}
+	_, idx, confidence := matcher.Match(t...)
+	//log.Printf("best match: %s (%s) index=%d confidence=%v", display.English.Tags().Name(tag),
+        //	   display.Self.Name(tag), idx, confidence)
+	if confidence == language.Exact {
+	        return options[idx]
 	}
 	return options[0]
 }
@@ -175,8 +162,8 @@ func (p bySection) Less(i, j int) bool {
 	return p[i].Section < p[j].Section // neither are in mansect
 }
 
-func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []IndexEntry) []IndexEntry {
-	t := template // for convenience
+func (i Index) Narrow(acceptLang string, query, ref IndexEntry, entries []IndexEntry) []IndexEntry {
+	t := query // for convenience
 
 	fullyQualified := func() bool {
 		if t.Suite == "" || t.Binarypkg == "" || t.Section == "" || t.Language == "" {
@@ -209,34 +196,6 @@ func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []Ind
 		filtered = tmp
 	}
 
-	if t.Language != "" {
-		// Verify the specified language is a valid choice
-		var found bool
-		for _, e := range filtered {
-			if e.Language == t.Language {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Language = ""
-		}
-	}
-
-	if t.Suite != "" {
-		// Verify the specified suite is a valid choice
-		var found bool
-		for _, e := range filtered {
-			if e.Suite == t.Suite {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Suite = ""
-		}
-	}
-
 	// Narrow down as much as possible upfront. The keep callback is
 	// the logical and of all the keep callbacks below:
 	filter(func(e IndexEntry) bool {
@@ -256,17 +215,8 @@ func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []Ind
 				break
 			}
 		}
-		// Default to defaultSuite
-		if t.Suite == "" {
-			for _, e := range filtered {
-				if e.Suite == defaultSuite {
-					t.Suite = defaultSuite
-					break
-				}
-			}
-		}
-		// If the manpage is not contained in defaultSuite, use the
-		// first suite we can find for which the manpage is available.
+		// If the suite is not specified, use the first suite we can
+		// find for which the manpage is available.
 		if t.Suite == "" {
 			for _, e := range filtered {
 				t.Suite = e.Suite
@@ -341,8 +291,8 @@ func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []Ind
 }
 
 type NotFoundError struct {
-	Manpage    string
-	BestChoice IndexEntry
+	Manpage string
+	Choices []IndexEntry
 }
 
 func (e *NotFoundError) Error() string {
@@ -399,7 +349,6 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	log.Printf("Query %q, path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", r.URL.Path, path, suite, binarypkg, name, section, lang)
 
-
 	acceptLang := r.Header.Get("Accept-Language")
 	ref := IndexEntry{
 		Suite:     r.FormValue("suite"),
@@ -416,15 +365,16 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	if len(filtered) == 0 {
 		// Present the user with another choice for this manpage.
-		var best IndexEntry
+		var choices []IndexEntry
 		if name != "index" && name != "favicon" {
-			best = i.Narrow(acceptLang, IndexEntry{}, ref, entries)[0]
+		        // XXX choices = i.Narrow(acceptLang, IndexEntry{}, ref, entries)
+			choices = entries
 		}
-		log.Printf("Not found: Url %q, suggesting %q", r.URL.Path, best)
+		log.Printf("Not found: Url %q, suggesting %q", r.URL.Path, choices)
 
 		return "", &NotFoundError{
-			Manpage:    name,
-			BestChoice: best}
+			Manpage: name,
+			Choices: choices}
 	}
 	log.Printf("Found: Query %q -> Url %q", r.URL.Path, filtered[0].ServingPath(suffix))
 

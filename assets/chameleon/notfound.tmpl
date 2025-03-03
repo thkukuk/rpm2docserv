@@ -2,21 +2,18 @@
 
 <div class="maincontents">
 
-{{ if or (ne .BestChoice.Suite "") (eq .Manpage "index") }}
 <p>
-Sorry, I could not find the specific manpage version you requested!
-</p>
-{{ else }}
-<p>
+{{ if (.Choices) -}}
+Sorry, the manpage “{{ .Manpage }}” was not found with the specified criteria. Did you mean one of the following instead?
+<ul>
+{{ range $idx, $choice := .Choices }}
+  <li><a href="{{ $choice.ServingPath ".html" }}">{{ $choice.ServingPath ".html" }}</a></li>
+{{ end -}}
+</ul>
+{{ else -}}
 Sorry, the manpage “{{ .Manpage }}” was not found! Did you spell it correctly?
+{{ end - }}
 </p>
-{{ end }}
-
-{{ if ne .BestChoice.Suite "" }}
-<p>
-Could I maybe offer you the manpage <a href="{{ .BestChoice.ServingPath ".html" }}">{{ .BestChoice.ServingPath ".html" }}</a> instead?
-</p>
-{{ end }}
 
 </div>
 

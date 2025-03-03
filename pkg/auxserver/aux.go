@@ -94,7 +94,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				Breadcrumbs    []string // incorrect type, but empty anyway
 				FooterExtra    string
 				Manpage        string
-				BestChoice     redirect.IndexEntry
+				Choices        []redirect.IndexEntry
 				Meta           *manpage.Meta
 				HrefLangs      []*manpage.Meta
 				Suites         []string
@@ -106,7 +106,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				LogoUrl:        "",
 				Rpm2docservVersion: s.rpm2docservVersion,
 				Manpage:        nf.Manpage,
-				BestChoice:     nf.BestChoice,
+				Choices:        nf.Choices,
 				IsOffline:      true,
 			})
 			if err == nil {
