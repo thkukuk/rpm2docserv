@@ -2,18 +2,24 @@
 Description=Docserv auxiliary service endpoints
 Documentation=https://github.com/thkukuk/rpm2docserv
 After=local-fs.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 [Service]
 User=docserv-aux
 Group=docserv-aux
+Environment="AUXSERVER_LISTEN="
+Environment="AUXSERVER_INDEX="
 EnvironmentFile=-/usr/etc/default/docserv-auxserver
 EnvironmentFile=-/etc/default/docserv-auxserver
 ExecStart=/usr/sbin/docserv-auxserver $AUXSERVER_LISTEN $AUXSERVER_INDEX
+ExecReload=/usr/bin/kill -s SIGHUP $MAINPID
 # Provide a separate /tmp to the process.
 PrivateTmp=true
 # Provide all system files read-only to the process.
 ProtectSystem=strict
 Restart=on-failure
+RestartSec=10
 
 
 [Install]
