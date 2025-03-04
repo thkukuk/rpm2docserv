@@ -2,6 +2,8 @@ package main
 
 import (
 	"io"
+	"slices"
+	"sort"
 	"sync/atomic"
 
 	pb "github.com/thkukuk/rpm2docserv/pkg/proto"
@@ -36,12 +38,21 @@ func writeIndex(dest string, gv globalView) error {
 	for lang := range langs {
 		idx.Language = append(idx.Language, lang)
 	}
+	sort.Strings(idx.Language)
 
 	for section := range sections {
 		idx.Section = append(idx.Section, section)
 	}
+	sort.Strings(idx.Section)
 
 	idx.Suite = gv.idxSuites
+
+	idx.Products = make([]string, 0, len(gv.idxSuites))
+	for e := range gv.idxProducts {
+		idx.Products = append(idx.Products, e)
+	}
+	sort.Strings(idx.Products)
+	idx.Products = slices.Compact(idx.Products)
 
 	idxb, err := proto.Marshal(idx)
 	if err != nil {

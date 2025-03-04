@@ -17,4 +17,5 @@ message Index {
   repeated string language = 2;
   map<string,string> suite = 3;
   repeated string section = 4;
+  repeated string products = 5;
 }

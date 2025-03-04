@@ -7,7 +7,6 @@ import (
 	"log"
 	"strings"
 
-	"golang.org/x/exp/maps"
 	"github.com/thkukuk/rpm2docserv/pkg/redirect"
 )
 
@@ -35,6 +34,6 @@ func main() {
 
 	fmt.Printf("Entries: %q\n", idx.Entries)
 	fmt.Printf("Suites: %q\n", idx.Suites)
-	fmt.Printf("Langs: %q\n", maps.Keys(idx.Langs))
-	fmt.Printf("Sections: %q\n", maps.Keys(idx.Sections))
+	fmt.Printf("Langs: %q\n", idx.Langs)
+	fmt.Printf("Sections: %q\n", idx.Sections)
 }

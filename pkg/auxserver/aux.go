@@ -107,6 +107,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				Rpm2docservVersion: s.rpm2docservVersion,
 				Manpage:        nf.Manpage,
 				Choices:        nf.Choices,
+				Suites:         nf.Suites,
 				IsOffline:      true,
 			})
 			if err == nil {

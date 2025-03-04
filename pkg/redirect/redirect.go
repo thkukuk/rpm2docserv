@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -29,10 +30,11 @@ func (e IndexEntry) ServingPath(suffix string) string {
 }
 
 type Index struct {
-	Entries  map[string][]IndexEntry
-	Suites   map[string]string
-	Langs    map[string]bool
-	Sections map[string]bool
+	Entries      map[string][]IndexEntry
+	Suites       map[string]string
+	ProductNames []string
+	Langs        []string
+	Sections     []string
 }
 
 // XXX bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
@@ -70,7 +72,7 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 			if _, ok := i.Suites[parts[0]]; ok {
 				suite = parts[0]
 			} else {
-				if i.Sections[base] {
+				if sliceContainsSorted(i.Sections,base) {
 					// man.freebsd.org
 					section = base
 					base = parts[0]
@@ -92,17 +94,17 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 
 	// The last part can either be a language or a section
 	consumed := 0
-	if l := parts[len(parts)-1]; i.Langs[l] {
+	if l := parts[len(parts)-1]; sliceContainsSorted(i.Langs, l) {
 		lang = l
 		consumed++
-	} else if l := parts[len(parts)-1]; i.Sections[l] {
+	} else if l := parts[len(parts)-1]; sliceContainsSorted(i.Sections, l) {
 		section = l
 		consumed++
 	}
 	// The second to last part (if enough parts are present) can
 	// be a section (because the language was already specified).
 	if len(parts) > 1+consumed {
-		if s := parts[len(parts)-1-consumed]; i.Sections[s] {
+		if s := parts[len(parts)-1-consumed]; sliceContainsSorted(i.Sections, s) {
 			section = s
 			consumed++
 		}
@@ -115,25 +117,8 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 		lang
 }
 
-type byMainSection []IndexEntry
-
-func (p byMainSection) Len() int      { return len(p) }
-func (p byMainSection) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p byMainSection) Less(i, j int) bool {
-	// Compare main sections first
-	mi := p[i].Section[:1]
-	mj := p[j].Section[:1]
-	if mi < mj {
-		return true
-	}
-	if mi > mj {
-		return false
-	}
-	return len(p[i].Section) > len(p[j].Section)
-}
-
 // Default taken from man(1):
-var mansect = searchOrder(strings.Split("1 n l 8 3 2 3posix 3pm 3perl 3am 5 4 9 6 7", " "))
+var mansect = searchOrder(strings.Split("0 1 n l 8 3 2 5 4 9 6 7 1x 3x 4x 5x 6x 8x 1bind 3bind 5bind 7bind 8bind 1cn 8cn 1m 1mh 5mh 8mh 1netpbm 3netpbm 5netpbm 0p 1p 3p 3posix 1pgsql 3pgsql 5pgsql 3C++ 8C++ 3blt 3curses 3ncurses 3form 3menu 3db 3gdbm 3f 3gk 3paper 3mm 5mm 3perl 3pm 3pq 3qt 3pub 3readline 1ssl 3ssl 5ssl 7ssl 3t 3tk 3tcl 3tclx 3tix 7l 7nr 8c Cg g s m", " "))
 
 func searchOrder(sections []string) map[string]int {
 	order := make(map[string]int)
@@ -162,20 +147,25 @@ func (p bySection) Less(i, j int) bool {
 	return p[i].Section < p[j].Section // neither are in mansect
 }
 
-func (i Index) Narrow(acceptLang string, query, ref IndexEntry, entries []IndexEntry) []IndexEntry {
-	t := query // for convenience
+func sliceContainsSorted(slice []string, lookup string) bool {
+	_, found := slices.BinarySearch(slice, lookup)
+	return found
+}
+
+func (i Index) Narrow(acceptLang string, query, referrer IndexEntry, entries []IndexEntry) []IndexEntry {
+	q := query // for convenience
 
 	fullyQualified := func() bool {
-		if t.Suite == "" || t.Binarypkg == "" || t.Section == "" || t.Language == "" {
+		if q.Suite == "" || q.Binarypkg == "" || q.Section == "" || q.Language == "" {
 			return false
 		}
 
 		// Verify validity
 		for _, e := range entries {
-			if t.Suite == e.Suite &&
-				t.Binarypkg == e.Binarypkg &&
-				t.Section == e.Section &&
-				t.Language == e.Language {
+			if q.Suite == e.Suite &&
+				q.Binarypkg == e.Binarypkg &&
+				q.Section == e.Section &&
+				q.Language == e.Language {
 				return true
 			}
 		}
@@ -199,60 +189,56 @@ func (i Index) Narrow(acceptLang string, query, ref IndexEntry, entries []IndexE
 	// Narrow down as much as possible upfront. The keep callback is
 	// the logical and of all the keep callbacks below:
 	filter(func(e IndexEntry) bool {
-		return (t.Suite == "" || e.Suite == t.Suite) &&
-			(t.Section == "" || e.Section[:1] == t.Section[:1]) &&
-			(t.Language == "" || e.Language == t.Language) &&
-			(t.Binarypkg == "" || e.Binarypkg == t.Binarypkg)
+		return (q.Suite == "" || e.Suite == q.Suite) &&
+			(q.Section == "" || e.Section[:1] == q.Section[:1]) &&
+			(q.Language == "" || e.Language == q.Language) &&
+			(q.Binarypkg == "" || e.Binarypkg == q.Binarypkg)
 	})
+	if len(filtered) == 0 {
+		return nil
+	}
 
 	// suite
 
-	if t.Suite == "" {
+	if q.Suite == "" {
 		// Prefer redirecting to the suite from the referrer
 		for _, e := range filtered {
-			if e.Suite == ref.Suite {
-				t.Suite = ref.Suite
-				break
-			}
-		}
-		// If the suite is not specified, use the first suite we can
-		// find for which the manpage is available.
-		if t.Suite == "" {
-			for _, e := range filtered {
-				t.Suite = e.Suite
+			if e.Suite == referrer.Suite {
+				q.Suite = referrer.Suite
 				break
 			}
 		}
 	}
 
-	filter(func(e IndexEntry) bool { return t.Suite == "" || e.Suite == t.Suite })
+	filter(func(e IndexEntry) bool { return q.Suite == "" || e.Suite == q.Suite })
 	if len(filtered) == 0 {
 		return nil
 	}
 	if fullyQualified() {
+		log.Printf("fullyQualified (Suite)")
 		return filtered
 	}
 
 	// section
 
-	if len(t.Section) > 1 {
-		// A subsection was specified. Sort by section, but prefer
-		// subsections so that they get matched first (e.g. “3” will
-		// come after “3edit”).
-		sort.Stable(byMainSection(filtered))
-	} else {
-		// No subsection was specified. Sort by section so that
-		// subsections are matched later (e.g. “3edit” will come after
-		// “3”).
-		sort.Stable(bySection(filtered))
+	// Sort by section following the order as used by man
+	sort.Stable(bySection(filtered))
+
+	if q.Section == "" {
+		// Prefer section from the referrer
+		for _, e := range filtered {
+			if e.Section == referrer.Section {
+				q.Section = referrer.Section
+				break
+			}
+		}
+		// If still empty, use first one
+		if q.Section == "" {
+			q.Section = filtered[0].Section
+		}
 	}
 
-	if t.Section == "" {
-		// TODO(later): respect the section preference cookie (+test)
-		t.Section = filtered[0].Section
-	}
-
-	filter(func(e IndexEntry) bool { return t.Section == "" || e.Section[:1] == t.Section[:1] })
+	filter(func(e IndexEntry) bool { return q.Section == "" || e.Section[:1] == q.Section[:1] })
 	if len(filtered) == 0 {
 		return nil
 	}
@@ -262,14 +248,14 @@ func (i Index) Narrow(acceptLang string, query, ref IndexEntry, entries []IndexE
 
 	// language
 
-	if t.Language == "" {
+	if q.Language == "" {
 		tags, _, _ := language.ParseAcceptLanguage(acceptLang)
 		// ignore err: tags == nil results in the default language
 		best := bestLanguageMatch(tags, filtered)
-		t.Language = best.Language
+		q.Language = best.Language
 	}
 
-	filter(func(e IndexEntry) bool { return t.Language == "" || e.Language == t.Language })
+	filter(func(e IndexEntry) bool { return q.Language == "" || e.Language == q.Language })
 	if len(filtered) == 0 {
 		return nil
 	}
@@ -279,11 +265,11 @@ func (i Index) Narrow(acceptLang string, query, ref IndexEntry, entries []IndexE
 
 	// binarypkg
 
-	if t.Binarypkg == "" {
-		t.Binarypkg = filtered[0].Binarypkg
+	if q.Binarypkg == "" {
+		q.Binarypkg = filtered[0].Binarypkg
 	}
 
-	filter(func(e IndexEntry) bool { return t.Binarypkg == "" || e.Binarypkg == t.Binarypkg })
+	filter(func(e IndexEntry) bool { return q.Binarypkg == "" || e.Binarypkg == q.Binarypkg })
 	if len(filtered) == 0 {
 		return nil
 	}
@@ -293,6 +279,7 @@ func (i Index) Narrow(acceptLang string, query, ref IndexEntry, entries []IndexE
 type NotFoundError struct {
 	Manpage string
 	Choices []IndexEntry
+	Suites  []string
 }
 
 func (e *NotFoundError) Error() string {
@@ -350,7 +337,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	log.Printf("Query %q, path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", r.URL.Path, path, suite, binarypkg, name, section, lang)
 
 	acceptLang := r.Header.Get("Accept-Language")
-	ref := IndexEntry{
+	referrer := IndexEntry{
 		Suite:     r.FormValue("suite"),
 		Binarypkg: r.FormValue("binarypkg"),
 		Section:   r.FormValue("section"),
@@ -361,20 +348,21 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		Binarypkg: binarypkg,
 		Section:   section,
 		Language:  lang,
-	}, ref, entries)
+	}, referrer, entries)
 
 	if len(filtered) == 0 {
 		// Present the user with another choice for this manpage.
 		var choices []IndexEntry
 		if name != "index" && name != "favicon" {
-		        // XXX choices = i.Narrow(acceptLang, IndexEntry{}, ref, entries)
+		        //choices = i.Narrow(acceptLang, IndexEntry{}, referrer, entries)
 			choices = entries
 		}
 		log.Printf("Not found: Url %q, suggesting %q", r.URL.Path, choices)
 
 		return "", &NotFoundError{
 			Manpage: name,
-			Choices: choices}
+			Choices: choices,
+		        Suites:  i.ProductNames}
 	}
 	log.Printf("Found: Query %q -> Url %q", r.URL.Path, filtered[0].ServingPath(suffix))
 
@@ -383,8 +371,6 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 func IndexFromProto(paths []string) (Index, error) {
 	index := Index{
-		Langs:    make(map[string]bool),
-		Sections: make(map[string]bool),
 		Suites:   make(map[string]string),
 	}
 	var idx pb.Index
@@ -412,14 +398,25 @@ func IndexFromProto(paths []string) (Index, error) {
 			Language:  e.Language,
 		})
 	}
-	for _, l := range idx.Language {
-		index.Langs[l] = true
-	}
+	index.Langs = idx.Language
+	index.Sections = idx.Section
 	index.Suites = idx.Suite
-	for _, l := range idx.Section {
-		index.Sections[l] = true
-	}
-	index.Sections["0"] = true
 
+	// old index files are not sorted
+	sort.Strings(index.Langs)
+	sort.Strings(index.Sections)
+
+	if len(idx.Products) > 0 {
+		index.ProductNames = idx.Products
+	} else {
+		// No product names in the index file, generate ourself
+		// Sort order does not need to match rpm2docserv!
+		index.ProductNames = make([]string, 0, len(idx.Suite))
+		for e := range idx.Suite {
+			index.ProductNames = append(index.ProductNames, e)
+		}
+		sort.Strings(index.ProductNames)
+		index.ProductNames = slices.Compact(index.ProductNames)
+	}
 	return index, nil
 }
