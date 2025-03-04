@@ -38,8 +38,7 @@ type globalView struct {
 	// pkgs contains all binary packages we know of.
 	pkgs []*pkgEntry
 
-        // suites is always "manpages", but leave it if needed later
-	// and to make things easier.
+	// Suites is the list of Product Names
         suites map[string]bool
 
         // idxSuites maps codename, suite and command-line argument to suite (as in
