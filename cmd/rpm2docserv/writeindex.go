@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"slices"
 	"sort"
 	"sync/atomic"
 
@@ -47,12 +46,11 @@ func writeIndex(dest string, gv globalView) error {
 
 	idx.Suite = gv.idxSuites
 
-	idx.Products = make([]string, 0, len(gv.idxSuites))
-	for e := range gv.idxProducts {
-		idx.Products = append(idx.Products, e)
+	idx.Products = make([]string, 0, len(gv.suites))
+	for product := range gv.suites {
+		idx.Products = append(idx.Products, product)
 	}
-	sort.Strings(idx.Products)
-	idx.Products = slices.Compact(idx.Products)
+	sort.Stable(bySuiteStr(idx.Products))
 
 	idxb, err := proto.Marshal(idx)
 	if err != nil {
