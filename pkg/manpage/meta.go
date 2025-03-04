@@ -15,29 +15,17 @@ type PkgMeta struct {
 	Filename  string
 	Sourcepkg string
 	Binarypkg string
-	Replaces  []string
 
 	// Version is used by the templates when rendering.
 	Version version.Version
 
-	// Suite is the Debian suite in which this binary package was
-	// found.
+	// Suite is the product in which this binary package was found.
 	Suite string
 }
 
 func (p *PkgMeta) SameBinary(o *PkgMeta) bool {
 	if p.Binarypkg == o.Binarypkg {
 		return true
-	}
-	for _, r := range p.Replaces {
-		if r == o.Binarypkg {
-			return true
-		}
-	}
-	for _, r := range o.Replaces {
-		if r == p.Binarypkg {
-			return true
-		}
 	}
 	return false
 }
