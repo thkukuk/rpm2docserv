@@ -412,8 +412,8 @@ func IndexFromProto(paths []string) (Index, error) {
 		// No product names in the index file, generate ourself
 		// Sort order does not need to match rpm2docserv!
 		index.ProductNames = make([]string, 0, len(idx.Suite))
-		for e := range idx.Suite {
-			index.ProductNames = append(index.ProductNames, e)
+		for i := range idx.Suite {
+			index.ProductNames = append(index.ProductNames, idx.Suite[i])
 		}
 		sort.Strings(index.ProductNames)
 		index.ProductNames = slices.Compact(index.ProductNames)

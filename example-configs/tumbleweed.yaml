@@ -5,6 +5,9 @@ servingdir: /extern/docserv
 download: false
 products:
   - name: openSUSE Tumbleweed
+    alias:
+      - MicroOS
+      - Aeon
     cache: 
       - /extern/Tumbleweed/x86_64
       - /extern/Tumbleweed/noarch

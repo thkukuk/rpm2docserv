@@ -23,6 +23,7 @@ type Suites struct {
 	Name     string   `yaml:"name"`
 	Cache    []string `yaml:"cache,omitempty"`
 	Packages []string `yaml:"packages,omitempty"`
+	Alias    []string `yaml:"alias,omitempty"`
 }
 
 type Config struct {

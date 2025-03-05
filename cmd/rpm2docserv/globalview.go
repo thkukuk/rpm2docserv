@@ -124,6 +124,9 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 
 		res.suites[suite.Name] = true
 		res.idxSuites[suite.Name] = suite.Name
+		for _, alias := range suite.Alias {
+			res.idxSuites[alias] = suite.Name
+		}
 
 		// Walk recursivly through the full cache directory, search all
 		// RPMs and store the meta data for them.
