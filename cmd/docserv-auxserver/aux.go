@@ -51,8 +51,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Loaded %d manpage entries, %d suites, %d languages, %d sections from index %q",
-		len(idx.Entries), len(idx.Suites), len(idx.Langs), len(idx.Sections), *indexPaths)
+	log.Printf("Loaded %d manpage entries, %d products, %d languages, %d sections from index %q",
+		len(idx.Entries), len(idx.ProductNames), len(idx.Langs), len(idx.Sections), *indexPaths)
 
 	commonTmpls := commontmpl.MustParseCommonTmpls()
 	notFoundTmpl := template.Must(commonTmpls.New("notfound").Parse(bundled.Asset("notfound.tmpl")))
@@ -70,8 +70,8 @@ func main() {
 				continue
 			}
 
-			log.Printf("Loaded %d manpage entries, %d suites, %d languages, %d sections from new index %q",
-				len(newidx.Entries), len(newidx.Suites), len(newidx.Langs), len(newidx.Sections), *indexPaths)
+			log.Printf("Loaded %d manpage entries, %d products, %d languages, %d sections from new index %q",
+				len(newidx.Entries), len(newidx.ProductNames), len(newidx.Langs), len(newidx.Sections), *indexPaths)
 
 			if err := server.SwapIndex(newidx); err != nil {
 				log.Printf("Swapping index failed: %v", err)

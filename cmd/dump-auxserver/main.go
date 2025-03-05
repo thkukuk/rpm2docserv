@@ -29,12 +29,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Loaded %d manpage entries, %d suites, %d languages, %d sections from index %q\n",
-		len(idx.Entries), len(idx.Suites), len(idx.Langs), len(idx.Sections), *indexPaths)
+	fmt.Printf("Loaded %d manpage entries, %d products, %d languages, %d sections from index %q\n",
+		len(idx.Entries), len(idx.ProductNames), len(idx.Langs), len(idx.Sections), *indexPaths)
 
 	fmt.Printf("Entries: %q\n", idx.Entries)
 	fmt.Printf("Product Names: %q\n", idx.ProductNames)
-	fmt.Printf("Product Mapping: %q\n", idx.Suites)
+	fmt.Printf("Product Mapping: %q\n", idx.ProductMapping)
 	fmt.Printf("Langs: %q\n", idx.Langs)
 	fmt.Printf("Sections: %q\n", idx.Sections)
 }

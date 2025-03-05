@@ -19,22 +19,22 @@ import (
 
 type IndexEntry struct {
 	Name      string // TODO: string pool
-	Suite     string // TODO: enum to save space
+	Product   string // TODO: enum to save space
 	Binarypkg string // TODO: sort by popcon, TODO: use a string pool
 	Section   string // TODO: use a string pool
 	Language  string // TODO: type: would it make sense to use language.Tag?
 }
 
 func (e IndexEntry) ServingPath(suffix string) string {
-	return "/" + e.Suite + "/" + e.Binarypkg + "/" + e.Name + "." + e.Section + "." + e.Language + suffix
+	return "/" + e.Product + "/" + e.Binarypkg + "/" + e.Name + "." + e.Section + "." + e.Language + suffix
 }
 
 type Index struct {
-	Entries      map[string][]IndexEntry
-	Suites       map[string]string
-	ProductNames []string
-	Langs        []string
-	Sections     []string
+	Entries        map[string][]IndexEntry
+	ProductNames   []string
+	Langs          []string
+	Sections       []string
+	ProductMapping map[string]string
 }
 
 // XXX bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
@@ -62,15 +62,15 @@ func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 	return options[0]
 }
 
-func (i Index) split(path string) (suite string, binarypkg string, name string, section string, lang string) {
+func (i Index) split(path string) (product string, binarypkg string, name string, section string, lang string) {
 	dir := strings.TrimPrefix(filepath.Dir(path), "/")
 	base := strings.TrimSpace(filepath.Base(path))
 	base = strings.Replace(base, " ", ".", -1)
 	parts := strings.Split(dir, "/")
 	if len(parts) > 0 {
 		if len(parts) == 1 {
-			if _, ok := i.Suites[parts[0]]; ok {
-				suite = parts[0]
+			if _, ok := i.ProductMapping[parts[0]]; ok {
+				product = parts[0]
 			} else {
 				if sliceContainsSorted(i.Sections,base) {
 					// man.freebsd.org
@@ -81,7 +81,7 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 				}
 			}
 		} else if len(parts) == 2 {
-			suite = parts[0]
+			product = parts[0]
 			binarypkg = parts[1]
 		}
 	}
@@ -89,7 +89,7 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 	// the first part can contain dots, so we need to “split from the right”
 	parts = strings.Split(base, ".")
 	if len(parts) == 1 {
-		return suite, binarypkg, base, section, lang
+		return product, binarypkg, base, section, lang
 	}
 
 	// The last part can either be a language or a section
@@ -110,7 +110,7 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 		}
 	}
 
-	return suite,
+	return product,
 		binarypkg,
 		strings.Join(parts[:len(parts)-consumed], "."),
 		section,
@@ -156,13 +156,13 @@ func (i Index) Narrow(acceptLang string, query, referrer IndexEntry, entries []I
 	q := query // for convenience
 
 	fullyQualified := func() bool {
-		if q.Suite == "" || q.Binarypkg == "" || q.Section == "" || q.Language == "" {
+		if q.Product == "" || q.Binarypkg == "" || q.Section == "" || q.Language == "" {
 			return false
 		}
 
 		// Verify validity
 		for _, e := range entries {
-			if q.Suite == e.Suite &&
+			if q.Product == e.Product &&
 				q.Binarypkg == e.Binarypkg &&
 				q.Section == e.Section &&
 				q.Language == e.Language {
@@ -189,7 +189,7 @@ func (i Index) Narrow(acceptLang string, query, referrer IndexEntry, entries []I
 	// Narrow down as much as possible upfront. The keep callback is
 	// the logical and of all the keep callbacks below:
 	filter(func(e IndexEntry) bool {
-		return (q.Suite == "" || e.Suite == q.Suite) &&
+		return (q.Product == "" || e.Product == q.Product) &&
 			(q.Section == "" || e.Section[:1] == q.Section[:1]) &&
 			(q.Language == "" || e.Language == q.Language) &&
 			(q.Binarypkg == "" || e.Binarypkg == q.Binarypkg)
@@ -200,17 +200,17 @@ func (i Index) Narrow(acceptLang string, query, referrer IndexEntry, entries []I
 
 	// suite
 
-	if q.Suite == "" {
+	if q.Product == "" {
 		// Prefer redirecting to the suite from the referrer
 		for _, e := range filtered {
-			if e.Suite == referrer.Suite {
-				q.Suite = referrer.Suite
+			if e.Product == referrer.Product {
+				q.Product = referrer.Product
 				break
 			}
 		}
 	}
 
-	filter(func(e IndexEntry) bool { return q.Suite == "" || e.Suite == q.Suite })
+	filter(func(e IndexEntry) bool { return q.Product == "" || e.Product == q.Product })
 	if len(filtered) == 0 {
 		return nil
 	}
@@ -315,7 +315,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	suite, binarypkg, name, section, lang := i.split(path)
 
-	if rewrite, ok := i.Suites[suite]; ok {
+	if rewrite, ok := i.ProductMapping[suite]; ok {
 		suite = rewrite
 	}
 
@@ -338,13 +338,13 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	acceptLang := r.Header.Get("Accept-Language")
 	referrer := IndexEntry{
-		Suite:     r.FormValue("suite"),
+		Product:   r.FormValue("suite"),
 		Binarypkg: r.FormValue("binarypkg"),
 		Section:   r.FormValue("section"),
 		Language:  r.FormValue("language"),
 	}
 	filtered := i.Narrow(acceptLang, IndexEntry{
-		Suite:     suite,
+		Product:   suite,
 		Binarypkg: binarypkg,
 		Section:   section,
 		Language:  lang,
@@ -371,7 +371,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 func IndexFromProto(paths []string) (Index, error) {
 	index := Index{
-		Suites:   make(map[string]string),
+		ProductMapping:   make(map[string]string),
 	}
 	var idx pb.Index
 
@@ -392,7 +392,7 @@ func IndexFromProto(paths []string) (Index, error) {
 		name := strings.ToLower(e.Name)
 		index.Entries[name] = append(index.Entries[name], IndexEntry{
 			Name:      e.Name,
-			Suite:     e.Suite,
+			Product:   e.Suite,
 			Binarypkg: e.Binarypkg,
 			Section:   e.Section,
 			Language:  e.Language,
@@ -400,7 +400,7 @@ func IndexFromProto(paths []string) (Index, error) {
 	}
 	index.Langs = idx.Language
 	index.Sections = idx.Section
-	index.Suites = idx.Suite
+	index.ProductMapping = idx.Suite
 
 	// old index files are not sorted
 	sort.Strings(index.Langs)
