@@ -50,7 +50,7 @@ func writeIndex(dest string, gv globalView) error {
 	for product := range gv.suites {
 		idx.Products = append(idx.Products, product)
 	}
-	sort.Stable(bySuiteStr(idx.Products))
+	sort.Stable(byProductStr(idx.Products))
 
 	idxb, err := proto.Marshal(idx)
 	if err != nil {

@@ -24,11 +24,11 @@ func mustParseAboutTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("about").Parse(bundled.Asset("about.tmpl")))
 }
 
-type bySuiteStr []string
+type byProductStr []string
 
-func (p bySuiteStr) Len() int      { return len(p) }
-func (p bySuiteStr) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p bySuiteStr) Less(i, j int) bool {
+func (p byProductStr) Len() int      { return len(p) }
+func (p byProductStr) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byProductStr) Less(i, j int) bool {
 	orderi, oki := sortOrder[p[i]]
 	orderj, okj := sortOrder[p[j]]
 	if !oki || !okj {
@@ -50,7 +50,7 @@ func renderAux(destDir string, gv globalView) error {
 	for suite := range gv.suites {
 		suites = append(suites, suite)
 	}
-	sort.Stable(bySuiteStr(suites))
+	sort.Stable(byProductStr(suites))
 
 	if err := write.Atomically(filepath.Join(destDir, "index.html"), false, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {

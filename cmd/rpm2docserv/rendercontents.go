@@ -24,7 +24,7 @@ func renderContents(dest, suite string, bins []string, gv globalView) error {
 	for suite := range gv.suites {
 		suites = append(suites, suite)
 	}
-	sort.Stable(bySuiteStr(suites))
+	sort.Stable(byProductStr(suites))
 
 	if err := write.Atomically(dest, false, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {

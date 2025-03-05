@@ -396,7 +396,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 	for suite := range gv.suites {
 		suites = append(suites, suite)
 	}
-	sort.Stable(bySuiteStr(suites))
+	sort.Stable(byProductStr(suites))
 
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s", meta.Name, meta.Section, meta.Package.Binarypkg)

@@ -39,7 +39,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 	for suite := range gv.suites {
 		suites = append(suites, suite)
 	}
-	sort.Stable(bySuiteStr(suites))
+	sort.Stable(byProductStr(suites))
 
 	return write.Atomically(dest, false, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
@@ -95,7 +95,7 @@ func renderSrcPkgindex(dest string, src string,
 	for suite := range gv.suites {
 		suites = append(suites, suite)
 	}
-	sort.Stable(bySuiteStr(suites))
+	sort.Stable(byProductStr(suites))
 
 	return write.Atomically(dest, false, func(w io.Writer) error {
 		return srcpkgindexTmpl.Execute(w, struct {
