@@ -46,11 +46,17 @@ func (p byProductStr) Less(i, j int) bool {
 
 
 func renderAux(destDir string, gv globalView) error {
-	suites := make([]string, 0, len(gv.suites))
-	for suite := range gv.suites {
-		suites = append(suites, suite)
+	products := make([]string, 0, len(gv.suites))
+	for product := range gv.suites {
+		products = append(products, product)
 	}
-	sort.Stable(byProductStr(suites))
+	sort.Stable(byProductStr(products))
+
+	aliases := make([]string, 0, len(gv.idxSuites))
+	for alias := range gv.idxSuites {
+		aliases = append(aliases, alias)
+	}
+	sort.Stable(byProductStr(aliases))
 
 	if err := write.Atomically(filepath.Join(destDir, "index.html"), false, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {
@@ -63,6 +69,7 @@ func renderAux(destDir string, gv globalView) error {
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Suites         []string
+			Aliases        []string
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 		}{
@@ -70,7 +77,8 @@ func renderAux(destDir string, gv globalView) error {
 			ProductName:    productName,
 			ProductUrl:     productUrl,
 			LogoUrl:        logoUrl,
-			Suites:         suites,
+			Suites:         products,
+			Aliases:        aliases,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
@@ -91,6 +99,7 @@ func renderAux(destDir string, gv globalView) error {
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 			Suites         []string
+			Aliases        []string
 		}{
 			Title:          "About",
 			ProductName:    productName,
@@ -98,7 +107,8 @@ func renderAux(destDir string, gv globalView) error {
 			LogoUrl:        logoUrl,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
-			Suites:         suites,
+			Suites:         products,
+			Aliases:        aliases,
 		})
 	}); err != nil {
 		return err

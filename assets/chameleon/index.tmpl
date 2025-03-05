@@ -28,8 +28,18 @@
       <button class="btn btn-secondary" type="submit">Jump to manpage</button>
     </form>
     The search understands the following syntax:<br>
-    <code>[product/]&lt;manpage name&gt;[.section][.language]</code><br>
-    The manpage name is mandatory. If &lt;product&gt;, &lt;section&gt; or &lt;language&gt; are not specified, browser and system defaults are used.
+    <code>[product/][binarypackage/]&lt;manpage name&gt;[.section][.language]</code><br>
+    The manpage name is mandatory. If &lt;product&gt;, &lt;binarypacakge&gt;, &lt;section&gt; or &lt;language&gt; are not specified, browser and system defaults are used.
+{{ if .Aliases }}
+    Valid product names are:
+    <ul>
+    {{ range $idx, $alias := .Aliases }}
+      <li>
+       {{ $alias }}
+      </li>
+    {{ end -}}
+    </ul>
+{{ end -}}
   </li>
 
   <li>
