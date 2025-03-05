@@ -45,24 +45,25 @@ var (
 // use go build -ldflags "-X main.rpm2docservVersion=<version>" to set the version
 var rpm2docservVersion = "HEAD"
 
-type Suites struct {
-        Name     string   `yaml:"name"`
-        Cache    []string `yaml:"cache,omitempty"`
-        Packages []string `yaml:"packages,omitempty"`
+type Products struct {
+	Name     string   `yaml:"name"`
+	Cache    []string `yaml:"cache,omitempty"`
+	Packages []string `yaml:"packages,omitempty"`
+	Alias    []string `yaml:"alias,omitempty"`
 }
 
 type Config struct {
-        ProductName string `yaml:"productname,omitempty"`
-        ProductUrl  string `yaml:"producturl,omitempty"`
-        LogoUrl     string `yaml:"logourl,omitempty"`
-        AssetsDir   string `yaml:"assets,omitempty"`
-        ServingDir  string `yaml:"servingdir"`
-        IndexPath   string `yaml:"auxindex"`
-        Download    string `yaml:"download"`
-        IsOffline   bool   `yaml:"offline,omitempty"`
-        BaseUrl     string `yaml:"baseurl,omitempty"`
-        Products    []Suites `yaml:"products"`
-        SortOrder   []string `yaml:"sortorder"`
+        ProductName string     `yaml:"productname,omitempty"`
+        ProductUrl  string     `yaml:"producturl,omitempty"`
+        LogoUrl     string     `yaml:"logourl,omitempty"`
+        AssetsDir   string     `yaml:"assets,omitempty"`
+        ServingDir  string     `yaml:"servingdir"`
+        IndexPath   string     `yaml:"auxindex"`
+        Download    string     `yaml:"download"`
+        IsOffline   bool       `yaml:"offline,omitempty"`
+        BaseUrl     string     `yaml:"baseurl,omitempty"`
+        Products    []Products `yaml:"products"`
+        SortOrder   []string   `yaml:"sortorder"`
 }
 
 func read_yaml_config(conffile string) (Config, error) {
@@ -157,10 +158,10 @@ func collectFiles(basedir string, dir string, sitemapEntries map[string]time.Tim
 	return nil
 }
 
-func writeSitemap(basedir string, suite string, baseUrl string,
+func writeSitemap(basedir string, product string, baseUrl string,
 	          sitemapEntries map[string]time.Time, sitemaps map[string]time.Time) error {
 
-	escapedUrlPath := &url.URL{Path: suite}
+	escapedUrlPath := &url.URL{Path: product}
 	if *verbose {
 		log.Printf("Found %d entries for %s/%s", len(sitemapEntries), basedir, escapedUrlPath)
 	}
@@ -177,7 +178,7 @@ func writeSitemap(basedir string, suite string, baseUrl string,
 		}
 		batchKeys = batchKeys[:0]
 
-		sitemapPath := filepath.Join(basedir, suite, "sitemap" + strconv.Itoa(count) + ".xml.gz")
+		sitemapPath := filepath.Join(basedir, product, "sitemap" + strconv.Itoa(count) + ".xml.gz")
 		if *verbose {
 			log.Printf("Writing %d entries to %s", len(chunk), sitemapPath)
 		}
@@ -189,7 +190,7 @@ func writeSitemap(basedir string, suite string, baseUrl string,
 		if err := write.Atomically(sitemapPath, true, func(w io.Writer) error {
 			return sitemap.WriteTo(w, urlPrefix, chunk)
 		}); err != nil {
-			return fmt.Errorf("Write sitemap for %v failed: %v", suite, err)
+			return fmt.Errorf("Write sitemap for %v failed: %v", product, err)
 		}
 		st, err := os.Stat(sitemapPath)
 		if err == nil {
