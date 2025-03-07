@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"sort"
 
 	"github.com/thkukuk/rpm2docserv/pkg/bundled"
 	"github.com/thkukuk/rpm2docserv/pkg/manpage"
@@ -17,13 +16,7 @@ func mustParseContentsTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("contents").Parse(bundled.Asset("contents.tmpl")))
 }
 
-func renderProductContents(dest, productName string, bins []string, gv globalView) error {
-
-	if len(bins) == 0 {
-		return nil
-	}
-	sort.Strings(bins)
-
+func renderProductContents(dest, productName string, pkgdirs []string, srcpkgdirs []string, gv globalView) error {
 	if err := write.Atomically(dest, false, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
@@ -35,7 +28,8 @@ func renderProductContents(dest, productName string, bins []string, gv globalVie
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			ProductName    string
-			Bins           []string
+			PkgDirs        []string
+			SrcPkgDirs     []string
 			Products       []string
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
@@ -49,7 +43,8 @@ func renderProductContents(dest, productName string, bins []string, gv globalVie
 			Breadcrumbs: breadcrumbs{
 				{"", productName},
 			},
-			Bins:           bins,
+			PkgDirs:        pkgdirs,
+			SrcPkgDirs:     srcpkgdirs,
 			ProductName:    productName,
 		        Products:       productList,
 		})

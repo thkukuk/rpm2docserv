@@ -10,10 +10,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"syscall"
-	"time"
 
 	"github.com/thkukuk/rpm2docserv/pkg/commontmpl"
 	"github.com/thkukuk/rpm2docserv/pkg/convert"
@@ -152,7 +152,7 @@ func listManpages(dir string) (map[string]*manpage.Meta, error) {
 	return manpageByName, nil
 }
 
-func renderDirectoryIndex(dir string, newestModTime time.Time, gv globalView) error {
+func renderDirectoryIndex(dir string, gv globalView) error {
 	manpageByName, err := listManpages(dir)
 	if err != nil {
 		return err
@@ -169,13 +169,13 @@ func renderDirectoryIndex(dir string, newestModTime time.Time, gv globalView) er
 // walkManContents walks over all entries in dir and, depending on mode, does:
 // 1. send a renderJob for each regular file
 // 2. send a renderJob for each symlink
-func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir string, mode renderingMode, gv globalView, newestModTime time.Time) (time.Time, error) {
+func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir string, mode renderingMode, gv globalView) error {
 	// the invariant is: each file ending in .gz must have a corresponding .html.gz file
 	// the .html.gz must have a modtime that is >= the modtime of the .gz file
 
 	files, err := os.Open(dir)
 	if err != nil {
-		return newestModTime, err
+		return err
 	}
 	defer files.Close()
 
@@ -194,9 +194,9 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 				// binary package directory by just optimistically
 				// calling readdir and handling the ENOTDIR error.
 				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
-					return newestModTime, nil
+					return nil
 				}
-				return newestModTime, err
+				return err
 			}
 		}
 
@@ -215,9 +215,6 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 			st, err := os.Lstat(full)
 			if err != nil {
 				continue
-			}
-			if st.ModTime().After(newestModTime) {
-				newestModTime = st.ModTime()
 			}
 
 			symlink := st.Mode()&os.ModeSymlink != 0
@@ -276,7 +273,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 		}
 	}
 
-	return newestModTime, nil
+	return nil
 }
 
 func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalView) error {
@@ -321,23 +318,22 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 				bfn := bfn // copy
 				dir := filepath.Join(*servingDir, sfi.Name(), bfn)
 				wg.Go(func() error {
-					var newestModTime time.Time
 					var err error
 					// Render all regular files first
-					newestModTime, err = walkManContents(ctx, renderChan, dir, regularFiles, gv, newestModTime)
+					err = walkManContents(ctx, renderChan, dir, regularFiles, gv)
 					if err != nil {
 						return err
 					}
 
 					// then render all symlinks, re-using the rendered fragments
-					newestModTime, err = walkManContents(ctx, renderChan, dir, symlinks, gv, newestModTime)
+					err = walkManContents(ctx, renderChan, dir, symlinks, gv)
 					if err != nil {
 						return err
 					}
 
 					// and finally render the package index files which need to
 					// consider both regular files and symlinks.
-					if err := renderDirectoryIndex(dir, newestModTime, gv); err != nil {
+					if err := renderDirectoryIndex(dir, gv); err != nil {
 						return err
 					}
 
@@ -448,28 +444,42 @@ func renderAll(gv globalView) error {
 	}
 
 	for _, product := range productList {
-		// XXX cannot happen?
 		if !gv.suites[product] {
 			log.Printf("ERROR: %s not known in gv.suites (%q)", product, gv.suites)
 			continue
 		}
 
-		bins, err := os.Open(filepath.Join(*servingDir, product))
-		if err != nil {
-			return err
-		}
-		defer bins.Close()
-
-		names, err := bins.Readdirnames(-1)
-		if err != nil {
-			return err
-		}
-
-		if err := renderProductContents(filepath.Join(*servingDir, product, "index.html",), product, names, gv); err != nil {
-			return err
+		b_pkgdirs := make(map[string]bool)
+		b_srcpkgdirs := make(map[string]bool)
+		for _, x := range gv.xref {
+			for _, m := range x {
+				if (product == m.Package.Suite) {
+					b_pkgdirs[m.Package.Binarypkg] = true
+					b_srcpkgdirs["src:" + m.Package.Sourcepkg] = true
+				}
+			}
 		}
 
-		bins.Close()
+		pkgdirs := make([]string, 0, len(b_pkgdirs))
+		srcpkgdirs := make([]string, 0, len(b_srcpkgdirs))
+
+		for e := range b_pkgdirs {
+			pkgdirs = append(pkgdirs, e)
+		}
+		for e := range b_srcpkgdirs {
+			srcpkgdirs = append(srcpkgdirs, e)
+		}
+
+		sort.Strings(pkgdirs)
+		sort.Strings(srcpkgdirs)
+
+		if len(pkgdirs) + len(srcpkgdirs) == 0 {
+			continue
+		}
+
+		if err := renderProductContents(filepath.Join(*servingDir, product, "index.html",), product, pkgdirs, srcpkgdirs, gv); err != nil {
+			return err
+		}
 	}
 
 	return nil

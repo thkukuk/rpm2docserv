@@ -20,23 +20,18 @@
 
 <section id="binarypkg">
 <h1>Manpages by binary package</h1>
-
 <ul>
-{{ range $idx, $dir := .Bins }}
-{{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) (not (HasPrefix $dir "src:")) }}
+{{ range $idx, $dir := .PkgDirs }}
   <li><a href="{{ BaseURLPath }}/{{ $.ProductName }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
-{{ end }}
 {{ end }}
 </ul>
 </section>
+
 <section id="sourcepkg">
 <h1>Manpages by source package</h1>
-
 <ul>
-{{ range $idx, $dir := .Bins }}
-{{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) (HasPrefix $dir "src:") }}
+{{ range $idx, $dir := .SrcPkgDirs }}
   <li><a href="{{ BaseURLPath }}/{{ $.ProductName }}/{{ $dir}}/index.html">{{ TrimPrefix $dir "src:"}}</a></li>
-{{ end }}
 {{ end }}
 </ul>
 </section>
