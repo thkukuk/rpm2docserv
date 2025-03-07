@@ -46,12 +46,6 @@ func (p byProductStr) Less(i, j int) bool {
 
 
 func renderAux(destDir string, gv globalView) error {
-	products := make([]string, 0, len(gv.suites))
-	for product := range gv.suites {
-		products = append(products, product)
-	}
-	sort.Stable(byProductStr(products))
-
 	aliases := make([]string, 0, len(gv.idxSuites))
 	for alias := range gv.idxSuites {
 		aliases = append(aliases, alias)
@@ -78,7 +72,7 @@ func renderAux(destDir string, gv globalView) error {
 			ProjectUrl:         projectUrl,
 			Aliases:            aliases,
 			LogoUrl:            logoUrl,
-			Products:           products,
+			Products:           productList,
 			IsOffline:          isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
@@ -107,7 +101,7 @@ func renderAux(destDir string, gv globalView) error {
 			LogoUrl:        logoUrl,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
-			Products:       products,
+			Products:       productList,
 			Aliases:        aliases,
 		})
 	}); err != nil {

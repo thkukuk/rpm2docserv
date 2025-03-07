@@ -22,14 +22,7 @@ func renderProductContents(dest, productName string, bins []string, gv globalVie
 	if len(bins) == 0 {
 		return nil
 	}
-
 	sort.Strings(bins)
-
-	products := make([]string, 0, len(gv.suites))
-	for product := range gv.suites {
-		products = append(products, product)
-	}
-	sort.Stable(byProductStr(products))
 
 	if err := write.Atomically(dest, false, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
@@ -58,7 +51,7 @@ func renderProductContents(dest, productName string, bins []string, gv globalVie
 			},
 			Bins:           bins,
 			ProductName:    productName,
-		        Products:       products,
+		        Products:       productList,
 		})
 	}); err != nil {
 		return err

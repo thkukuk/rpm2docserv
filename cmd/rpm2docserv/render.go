@@ -447,18 +447,14 @@ func renderAll(gv globalView) error {
 		return fmt.Errorf("writing source index: %v", err)
 	}
 
-	suitedirs, err := os.ReadDir(*servingDir)
-	if err != nil {
-		return err
-	}
-	for _, sfi := range suitedirs {
-		if !sfi.IsDir() {
+	for _, product := range productList {
+		// XXX cannot happen?
+		if !gv.suites[product] {
+			log.Printf("ERROR: %s not known in gv.suites (%q)", product, gv.suites)
 			continue
 		}
-		if !gv.suites[sfi.Name()] {
-			continue
-		}
-		bins, err := os.Open(filepath.Join(*servingDir, sfi.Name()))
+
+		bins, err := os.Open(filepath.Join(*servingDir, product))
 		if err != nil {
 			return err
 		}
@@ -469,7 +465,7 @@ func renderAll(gv globalView) error {
 			return err
 		}
 
-		if err := renderProductContents(filepath.Join(*servingDir, sfi.Name(), "index.html",), sfi.Name(), names, gv); err != nil {
+		if err := renderProductContents(filepath.Join(*servingDir, product, "index.html",), product, names, gv); err != nil {
 			return err
 		}
 

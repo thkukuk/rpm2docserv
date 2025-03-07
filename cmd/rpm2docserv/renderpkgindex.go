@@ -35,12 +35,6 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 	}
 	sort.Strings(mans)
 
-	products := make([]string, 0, len(gv.suites))
-	for product := range gv.suites {
-		products = append(products, product)
-	}
-	sort.Stable(byProductStr(products))
-
 	return write.Atomically(dest, false, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title          string
@@ -72,7 +66,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 			Meta:          first,
 			ManpageByName: manpageByName,
 			Mans:          mans,
-			Products:      products,
+			Products:      productList,
 		})
 	})
 }
@@ -90,12 +84,6 @@ func renderSrcPkgIndex(dest string, src string,
 		mans = append(mans, n)
 	}
 	sort.Strings(mans)
-
-	products := make([]string, 0, len(gv.suites))
-	for product := range gv.suites {
-		products = append(products, product)
-	}
-	sort.Stable(byProductStr(products))
 
 	return write.Atomically(dest, false, func(w io.Writer) error {
 		return srcpkgindexTmpl.Execute(w, struct {
@@ -130,7 +118,7 @@ func renderSrcPkgIndex(dest string, src string,
 			ManpageByName: manpageByName,
 			Mans:          mans,
 			Src:           src,
-			Products:      products,
+			Products:      productList,
 		})
 	})
 }

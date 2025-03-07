@@ -46,11 +46,7 @@ func writeIndex(dest string, gv globalView) error {
 
 	idx.Suite = gv.idxSuites
 
-	idx.Products = make([]string, 0, len(gv.suites))
-	for product := range gv.suites {
-		idx.Products = append(idx.Products, product)
-	}
-	sort.Stable(byProductStr(idx.Products))
+	idx.Products = productList
 
 	idxb, err := proto.Marshal(idx)
 	if err != nil {

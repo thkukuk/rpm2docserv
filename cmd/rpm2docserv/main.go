@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 	_ "net/http/pprof"
@@ -238,11 +239,11 @@ func main() {
 		products[0].Packages = strings.Split(*pkg2Render, ",")
 	}
 
-	productList := make([]string, 0, len(products))
-        for product := range products {
-                productList = append(productList, product)
-        }
-        sort.Stable(byProductStr(productList))
+	productList = make([]string, 0, len(products))
+	for _, product := range products {
+		productList = append(productList, product.Name)
+	}
+	sort.Stable(byProductStr(productList))
 
 	if *injectAssets != "" {
 		if err := bundled.Inject(*injectAssets); err != nil {

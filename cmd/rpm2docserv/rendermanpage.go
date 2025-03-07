@@ -392,12 +392,6 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 	sort.Sort(byLanguage(langs))
 	sort.Sort(byLanguage(hrefLangs))
 
-        products := make([]string, 0, len(gv.suites))
-        for product := range gv.suites {
-                products = append(products, product)
-        }
-        sort.Stable(byProductStr(products))
-
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s", meta.Name, meta.Section, meta.Package.Binarypkg)
 	shorttitle := fmt.Sprintf("%s(%s)", meta.Name, meta.Section)
@@ -445,7 +439,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		Ambiguous:   ambiguous,
 		Content:     template.HTML(content),
 		Error:       renderErr,
-		Products:    products,
+		Products:    productList,
 	}, nil
 }
 
