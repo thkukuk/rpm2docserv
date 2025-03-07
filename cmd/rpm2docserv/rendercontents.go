@@ -17,43 +17,48 @@ func mustParseContentsTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("contents").Parse(bundled.Asset("contents.tmpl")))
 }
 
-func renderContents(dest, suite string, bins []string, gv globalView) error {
+func renderProductContents(dest, productName string, bins []string, gv globalView) error {
+
+	if len(bins) == 0 {
+		return nil
+	}
+
 	sort.Strings(bins)
 
-	suites := make([]string, 0, len(gv.suites))
-	for suite := range gv.suites {
-		suites = append(suites, suite)
+	products := make([]string, 0, len(gv.suites))
+	for product := range gv.suites {
+		products = append(products, product)
 	}
-	sort.Stable(byProductStr(suites))
+	sort.Stable(byProductStr(products))
 
 	if err := write.Atomically(dest, false, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
-			ProductName    string
-			ProductUrl     string
+			ProjectName    string
+			ProjectUrl     string
 			LogoUrl        string
 			Rpm2docservVersion string
 			IsOffline      bool
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
+			ProductName    string
 			Bins           []string
-			Suite          string
-			Suites         []string
+			Products       []string
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 		}{
-			Title:          fmt.Sprintf("Manpages of %s", suite),
-			ProductName:    productName,
-			ProductUrl:     productUrl,
+			Title:          fmt.Sprintf("Manpages of %s", productName),
+			ProjectName:    projectName,
+			ProjectUrl:     projectUrl,
 			LogoUrl:        logoUrl,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
-				{"", suite},
+				{"", productName},
 			},
 			Bins:           bins,
-			Suite:          suite,
-		        Suites:         suites,
+			ProductName:    productName,
+		        Products:       products,
 		})
 	}); err != nil {
 		return err

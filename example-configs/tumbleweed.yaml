@@ -1,5 +1,5 @@
-productname: openSUSE Tumbleweed
-producturl: https://www.opensuse.org
+projectname: openSUSE Tumbleweed
+projecturl: https://www.opensuse.org
 logourl: /logo.svg
 servingdir: /extern/docserv
 download: false
@@ -7,7 +7,13 @@ products:
   - name: openSUSE Tumbleweed
     alias:
       - MicroOS
-      - Aeon
     cache: 
       - /extern/Tumbleweed/x86_64
       - /extern/Tumbleweed/noarch
+  - name: Leap-16.0
+  - name: Leap-15.6
+sortorder:
+  - Tumbleweed
+  - Leap-16.0
+  - Leap-15.6
+

@@ -87,8 +87,8 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 			var buf bytes.Buffer
 			err = s.notFoundTmpl.Execute(&buf, struct {
 				Title          string
-				ProductName    string
-				ProductUrl     string
+				ProjectName    string
+				ProjectUrl     string
 				LogoUrl        string
 				Rpm2docservVersion string
 				Breadcrumbs    []string // incorrect type, but empty anyway
@@ -101,8 +101,8 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				IsOffline      bool
 			}{
 				Title:          "Not Found",
-				ProductName:    "",
-				ProductUrl:     "",
+				ProjectName:    "",
+				ProjectUrl:     "",
 				LogoUrl:        "",
 				Rpm2docservVersion: s.rpm2docservVersion,
 				Manpage:        nf.Manpage,

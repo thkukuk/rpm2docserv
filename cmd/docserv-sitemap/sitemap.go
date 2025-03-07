@@ -53,8 +53,8 @@ type Products struct {
 }
 
 type Config struct {
-        ProductName string     `yaml:"productname,omitempty"`
-        ProductUrl  string     `yaml:"producturl,omitempty"`
+        ProjectName string     `yaml:"projectname,omitempty"`
+        ProjectUrl  string     `yaml:"projecturl,omitempty"`
         LogoUrl     string     `yaml:"logourl,omitempty"`
         AssetsDir   string     `yaml:"assets,omitempty"`
         ServingDir  string     `yaml:"servingdir"`

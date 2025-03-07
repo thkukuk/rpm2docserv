@@ -354,16 +354,15 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalVie
 	return nil
 }
 
-func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error {
-	// Partition by suite for reduced memory usage and better locality of file
+func writeSourceIndex(gv globalView) error {
+	// Partition by product for reduced memory usage and better locality of file
 	// system access
 	for suite := range gv.suites {
 		binariesBySource := make(map[string][]string)
 		for _, p := range gv.pkgs {
-			if p.suite != suite {
-				continue
+			if p.suite == suite {
+				binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
 			}
-			binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
 		}
 
 		for src, binaries := range binariesBySource {
@@ -390,7 +389,7 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 			if err := os.MkdirAll(srcDir, 0755); err != nil {
 				return err
 			}
-			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html"), src, manpages, gv); err != nil {
+			if err := renderSrcPkgIndex(filepath.Join(srcDir, "index.html"), src, manpages, gv); err != nil {
 				return err
 			}
 		}
@@ -400,13 +399,6 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 
 func renderAll(gv globalView) error {
 	log.Printf("Preparing inverted maps")
-	sourceByBinary := make(map[string]string, len(gv.pkgs))
-	newestForSource := make(map[string]time.Time)
-	for _, p := range gv.pkgs {
-		sourceByBinary[p.suite+"/"+p.binarypkg] = p.source
-		newestForSource[p.source] = time.Time{}
-	}
-	log.Printf("%d sourceByBinary entries, %d newestForSource entries", len(sourceByBinary), len(newestForSource))
 
 	eg, ctx := errgroup.WithContext(context.Background())
 	renderChan := make(chan renderJob)
@@ -451,7 +443,7 @@ func renderAll(gv globalView) error {
 		return err
 	}
 
-	if err := writeSourceIndex(gv, newestForSource); err != nil {
+	if err := writeSourceIndex(gv); err != nil {
 		return fmt.Errorf("writing source index: %v", err)
 	}
 
@@ -477,7 +469,7 @@ func renderAll(gv globalView) error {
 			return err
 		}
 
-		if err := renderContents(filepath.Join(*servingDir, sfi.Name(), "index.html",), sfi.Name(), names, gv); err != nil {
+		if err := renderProductContents(filepath.Join(*servingDir, sfi.Name(), "index.html",), sfi.Name(), names, gv); err != nil {
 			return err
 		}
 

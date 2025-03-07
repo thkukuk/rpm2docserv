@@ -195,8 +195,8 @@ var notYetRenderedSentinel = errors.New("Not yet rendered")
 
 type manpagePrepData struct {
 	Title          string
-	ProductName    string
-	ProductUrl     string
+	ProjectName    string
+	ProjectUrl     string
 	LogoUrl        string
 	IsOffline      bool
 	Rpm2docservVersion string
@@ -213,7 +213,7 @@ type manpagePrepData struct {
 	Ambiguous      map[*manpage.Meta]bool
 	Content        template.HTML
 	Error          error
-	Suites         []string
+	Products       []string
 }
 
 type bySuite []*manpage.Meta
@@ -392,11 +392,11 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 	sort.Sort(byLanguage(langs))
 	sort.Sort(byLanguage(hrefLangs))
 
-	suites := make([]string, 0, len(gv.suites))
-	for suite := range gv.suites {
-		suites = append(suites, suite)
-	}
-	sort.Stable(byProductStr(suites))
+        products := make([]string, 0, len(gv.suites))
+        for product := range gv.suites {
+                products = append(products, product)
+        }
+        sort.Stable(byProductStr(products))
 
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s", meta.Name, meta.Section, meta.Package.Binarypkg)
@@ -423,8 +423,8 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 
 	return t, manpagePrepData{
 		Title:          title,
-		ProductName:    productName,
-		ProductUrl:     productUrl,
+		ProjectName:    projectName,
+		ProjectUrl:     projectUrl,
 		LogoUrl:        logoUrl,
 		IsOffline:      isOffline,
 		Rpm2docservVersion: rpm2docservVersion,
@@ -445,7 +445,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		Ambiguous:   ambiguous,
 		Content:     template.HTML(content),
 		Error:       renderErr,
-		Suites:      suites,
+		Products:    products,
 	}, nil
 }
 

@@ -26,8 +26,8 @@ type Suites struct {
 }
 
 type Config struct {
-	ProductName string `yaml:"productname,omitempty"`
-	ProductUrl  string `yaml:"producturl,omitempty"`
+	ProjectName string `yaml:"projectname,omitempty"`
+	ProjectUrl  string `yaml:"projecturl,omitempty"`
 	LogoUrl     string `yaml:"logourl,omitempty"`
 	AssetsDir   string `yaml:"assets,omitempty"`
 	ServingDir  string `yaml:"servingdir"`
@@ -77,24 +77,24 @@ var (
 		"Show rpm2docserv version and exit")
 
 	isOffline = false
-	productName string
-        productUrl  string
+	projectName string
+        projectUrl  string
+	productList []string
 	logoUrl     string
-	suites      []Suites
 )
 
 // use go build -ldflags "-X main.rpm2docservVersion=<version>" to set the version
 var rpm2docservVersion = "HEAD"
 
-func logic() error {
+func logic(products []Suites) error {
 	start := time.Now()
 
 	// Stage 1: Download specified packages and their dependencies
 	// we don't do this if we have more than one cache directory.
 	if !*noDownload {
-		if len(suites) == 1 && len(suites[0].Cache) == 1 {
+		if len(products) == 1 && len(products[0].Cache) == 1 {
 			log.Printf("Downloading RPMs...\n");
-			err := zypperDownload(suites[0].Packages, suites[0].Cache[0], start)
+			err := zypperDownload(products[0].Packages, products[0].Cache[0], start)
 			if err != nil {
 				return fmt.Errorf("downloading packages: %v", err)
 			}
@@ -106,7 +106,7 @@ func logic() error {
 
 	/* Stage 2: build globalView.pkgs by reading from disk */
 	log.Printf("Gathering all packages...\n");
-	globalView, err := buildGlobalView (suites, start)
+	globalView, err := buildGlobalView (products, start)
 	log.Printf("Gathered all packages, total %d packages", len(globalView.pkgs))
 
 	stage3 := time.Now()
@@ -183,6 +183,7 @@ func read_yaml_config(conffile string) (Config, error) {
 }
 
 func main() {
+	var products []Suites
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
@@ -226,16 +227,22 @@ func main() {
 		}
 
 		isOffline = config.IsOffline
-		productName = config.ProductName
-		productUrl = config.ProductUrl
+		projectName = config.ProjectName
+		projectUrl = config.ProjectUrl
 		logoUrl = config.LogoUrl
-		suites = config.Products
+		products = config.Products
 	} else {
-		suites = make([]Suites, 1)
-		suites[0].Name = "manpages"
-		suites[0].Cache = append(suites[0].Cache, *cacheDir)
-		suites[0].Packages = strings.Split(*pkg2Render, ",")
+		products = make([]Suites, 1)
+		products[0].Name = "manpages"
+		products[0].Cache = append(products[0].Cache, *cacheDir)
+		products[0].Packages = strings.Split(*pkg2Render, ",")
 	}
+
+	productList := make([]string, 0, len(products))
+        for product := range products {
+                productList = append(productList, product)
+        }
+        sort.Stable(byProductStr(productList))
 
 	if *injectAssets != "" {
 		if err := bundled.Inject(*injectAssets); err != nil {
@@ -258,7 +265,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := logic(); err != nil {
+	if err := logic(products); err != nil {
 		log.Fatal(err)
 	}
 }

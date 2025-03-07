@@ -60,26 +60,26 @@ func renderAux(destDir string, gv globalView) error {
 
 	if err := write.Atomically(filepath.Join(destDir, "index.html"), false, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {
-			Title          string
-			ProductName    string
-			ProductUrl     string
-			LogoUrl        string
-			IsOffline      bool
+			Title              string
+			ProjectName        string
+			ProjectUrl         string
+			Aliases            []string
+			Products           []string
+			Breadcrumbs        breadcrumbs
+			FooterExtra        string
+			HrefLangs          []*manpage.Meta
+			IsOffline          bool
+			LogoUrl            string
+			Meta               *manpage.Meta
 			Rpm2docservVersion string
-			Breadcrumbs    breadcrumbs
-			FooterExtra    string
-			Suites         []string
-			Aliases        []string
-			Meta           *manpage.Meta
-			HrefLangs      []*manpage.Meta
 		}{
-			Title:          "",
-			ProductName:    productName,
-			ProductUrl:     productUrl,
-			LogoUrl:        logoUrl,
-			Suites:         products,
-			Aliases:        aliases,
-			IsOffline:      isOffline,
+			Title:              "",
+			ProjectName:        projectName,
+			ProjectUrl:         projectUrl,
+			Aliases:            aliases,
+			LogoUrl:            logoUrl,
+			Products:           products,
+			IsOffline:          isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
 	}); err != nil {
@@ -89,8 +89,8 @@ func renderAux(destDir string, gv globalView) error {
 	if err := write.Atomically(filepath.Join(destDir, "about.html.gz"), true, func(w io.Writer) error {
 		return aboutTmpl.Execute(w, struct {
 			Title          string
-			ProductName    string
-			ProductUrl     string
+			ProjectName    string
+			ProjectUrl     string
 			LogoUrl        string
 			IsOffline      bool
 			Rpm2docservVersion string
@@ -98,16 +98,16 @@ func renderAux(destDir string, gv globalView) error {
 			FooterExtra    string
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
-			Suites         []string
+			Products       []string
 			Aliases        []string
 		}{
 			Title:          "About",
-			ProductName:    productName,
-			ProductUrl:     productUrl,
+			ProjectName:    projectName,
+			ProjectUrl:     projectUrl,
 			LogoUrl:        logoUrl,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
-			Suites:         products,
+			Products:       products,
 			Aliases:        aliases,
 		})
 	}); err != nil {

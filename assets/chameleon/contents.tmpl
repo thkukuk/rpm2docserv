@@ -24,7 +24,7 @@
 <ul>
 {{ range $idx, $dir := .Bins }}
 {{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) (not (HasPrefix $dir "src:")) }}
-  <li><a href="{{ BaseURLPath }}/{{ $.Suite }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
+  <li><a href="{{ BaseURLPath }}/{{ $.ProductName }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
 {{ end }}
 {{ end }}
 </ul>
@@ -35,7 +35,7 @@
 <ul>
 {{ range $idx, $dir := .Bins }}
 {{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) (HasPrefix $dir "src:") }}
-  <li><a href="{{ BaseURLPath }}/{{ $.Suite }}/{{ $dir}}/index.html">{{ TrimPrefix $dir "src:"}}</a></li>
+  <li><a href="{{ BaseURLPath }}/{{ $.ProductName }}/{{ $dir}}/index.html">{{ TrimPrefix $dir "src:"}}</a></li>
 {{ end }}
 {{ end }}
 </ul>

@@ -2,12 +2,12 @@
 
 <div class="maincontents">
 
-{{ if .ProductName -}}
+{{ if .ProjectName -}}
 <h1>
   {{ if .LogoUrl -}}
   <img src="{{ .LogoUrl }}" alt="Logo" width="48" height="48">
   {{ end -}}
-  {{ .ProductName }} Manpages Server
+  {{ .ProjectName }} Manpages Server
 </h1>
 {{ else -}}
 <h1>Manpages Server</h1>
@@ -55,10 +55,10 @@
   <li>
     Browse the repository index:
     <ul>
-      {{ range $idx, $suite := .Suites }}
+      {{ range $idx, $product := .Products }}
       <li>
-{{- if eq $suite "Tumbleweed" }}
-       <a href="{{ BaseURLPath }}/{{ $suite }}/index.html">Tumbleweed &amp; MicroOS</a>
+{{- if eq $product "Tumbleweed" }}
+       <a href="{{ BaseURLPath }}/{{ $product }}/index.html">Tumbleweed &amp; MicroOS</a>
       </li>
       <li>
        <a href="{{ BaseURLPath }}/Leap-16.0/index.html">Leap 16.0 (Alpha)</a>
@@ -66,7 +66,7 @@
       <li>
        <a href="{{ BaseURLPath }}/Leap-15.6/index.html">Leap 15.6</a>
 {{ else -}}
-       <a href="{{ BaseURLPath }}/{{ $suite }}/index.html">{{ $suite }}</a>
+       <a href="{{ BaseURLPath }}/{{ $product }}/index.html">{{ $product }}</a>
 {{ end -}}
       </li>
       {{ end }}

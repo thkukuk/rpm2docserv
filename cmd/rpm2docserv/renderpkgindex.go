@@ -35,17 +35,17 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 	}
 	sort.Strings(mans)
 
-	suites := make([]string, 0, len(gv.suites))
-	for suite := range gv.suites {
-		suites = append(suites, suite)
+	products := make([]string, 0, len(gv.suites))
+	for product := range gv.suites {
+		products = append(products, product)
 	}
-	sort.Stable(byProductStr(suites))
+	sort.Stable(byProductStr(products))
 
 	return write.Atomically(dest, false, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title          string
-			ProductName    string
-			ProductUrl     string
+			ProjectName    string
+			ProjectUrl     string
 			LogoUrl        string
 			Rpm2docservVersion string
 			IsOffline      bool
@@ -56,11 +56,11 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 			ManpageByName  map[string]*manpage.Meta
 			Mans           []string
 			HrefLangs      []*manpage.Meta
-			Suites         []string
+			Products       []string
 		}{
 			Title:          fmt.Sprintf("Manpages of %s", first.Package.Binarypkg),
-			ProductName:    productName,
-			ProductUrl:     productUrl,
+			ProjectName:    projectName,
+			ProjectUrl:     projectUrl,
 			LogoUrl:        logoUrl,
 			Rpm2docservVersion: rpm2docservVersion,
 			IsOffline:      isOffline,
@@ -72,12 +72,12 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 			Meta:          first,
 			ManpageByName: manpageByName,
 			Mans:          mans,
-			Suites:        suites,
+			Products:      products,
 		})
 	})
 }
 
-func renderSrcPkgindex(dest string, src string,
+func renderSrcPkgIndex(dest string, src string,
 	               manpageByName map[string]*manpage.Meta, gv globalView) error {
 	var first *manpage.Meta
 	for _, m := range manpageByName {
@@ -91,17 +91,17 @@ func renderSrcPkgindex(dest string, src string,
 	}
 	sort.Strings(mans)
 
-	suites := make([]string, 0, len(gv.suites))
-	for suite := range gv.suites {
-		suites = append(suites, suite)
+	products := make([]string, 0, len(gv.suites))
+	for product := range gv.suites {
+		products = append(products, product)
 	}
-	sort.Stable(byProductStr(suites))
+	sort.Stable(byProductStr(products))
 
 	return write.Atomically(dest, false, func(w io.Writer) error {
 		return srcpkgindexTmpl.Execute(w, struct {
 			Title          string
-			ProductName    string
-			ProductUrl     string
+			ProjectName    string
+			ProjectUrl     string
 			LogoUrl        string
 			IsOffline      bool
 			Rpm2docservVersion string
@@ -113,11 +113,11 @@ func renderSrcPkgindex(dest string, src string,
 			Mans           []string
 			HrefLangs      []*manpage.Meta
 			Src            string
-			Suites         []string
+			Products       []string
 		}{
 			Title:          fmt.Sprintf("Manpages of src:%s", src),
-			ProductName:    productName,
-			ProductUrl:     productUrl,
+			ProjectName:    projectName,
+			ProjectUrl:     projectUrl,
 			LogoUrl:        logoUrl,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
@@ -130,7 +130,7 @@ func renderSrcPkgindex(dest string, src string,
 			ManpageByName: manpageByName,
 			Mans:          mans,
 			Src:           src,
-			Suites:        suites,
+			Products:      products,
 		})
 	})
 }

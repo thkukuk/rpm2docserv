@@ -11,7 +11,7 @@
   {{ if .Title -}}
   <title>{{ .Title }}</title>
   {{ else -}}
-  <title>{{ .ProductName }} Manpages Server</title>
+  <title>{{ .ProjectName }} Manpages Server</title>
   {{ end -}}
 
   {{ if .IsOffline -}}
@@ -52,13 +52,13 @@
 
     <div class="collapse navbar-collapse" id="navbar-collapse">
       <ul class="nav navbar-nav mr-auto flex-md-shrink-0">
-        {{ if .ProductUrl -}}
+        {{ if .ProjectUrl -}}
         <li class="nav-item">
-          <a class="nav-link" href="{{ .ProductUrl }}">
+          <a class="nav-link" href="{{ .ProjectUrl }}">
             {{ if .LogoUrl -}}
             <img src="{{ .LogoUrl }}" alt="Logo" width="24" height="24">
             {{ end -}}
-            {{ .ProductName }}
+            {{ .ProjectName }}
           </a>
         </li>
 	{{ end -}}
@@ -67,23 +67,23 @@
             About
           </a>
         </li>
-        {{ if and (.Suites) (gt (len .Suites) 1) -}}
+        {{ if and (.Products) (gt (len .Products) 1) -}}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="cat-menu-link" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Repository Indices
           </a>
           <div class="dropdown-menu" aria-labelledby="cat-menu-link">
-            {{ range $idx, $suite := .Suites }}
-            <a class="dropdown-item" href="{{ BaseURLPath }}/{{ $suite }}/index.html">
-              {{ $suite }}
+            {{ range $idx, $product := .Products }}
+            <a class="dropdown-item" href="{{ BaseURLPath }}/{{ $product }}/index.html">
+              {{ $product }}
             </a>
             {{ end }}
           </div>
         </li>
         {{ else -}}
-        {{ range $idx, $suite := .Suites }}
+        {{ range $idx, $product := .Products }}
         <li class="nav-item">
-          <a class="nav-link" href="{{ BaseURLPath }}/{{ $suite }}/index.html">
+          <a class="nav-link" href="{{ BaseURLPath }}/{{ $product }}/index.html">
             Repository Index
           </a>
         </li>
