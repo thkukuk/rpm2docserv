@@ -43,7 +43,7 @@ type globalView struct {
 
         // idxSuites maps codename, suite and command-line argument to suite (as in
         // suites).
-        // e.g. map[oldoldstable:wheezy wheezy:wheezy]
+	// e.g. map[MicroOS:Tumbleweed Tumbleweed:Tumbleweed]
         idxSuites map[string]string
 
 	// xref maps from manpage.Meta.Name (e.g. “w3m” or “systemd.service”) to
