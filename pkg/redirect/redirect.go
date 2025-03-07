@@ -277,9 +277,9 @@ func (i Index) Narrow(acceptLang string, query, referrer IndexEntry, entries []I
 }
 
 type NotFoundError struct {
-	Manpage string
-	Choices []IndexEntry
-	Suites  []string
+	Manpage  string
+	Choices  []IndexEntry
+	Products []string
 }
 
 func (e *NotFoundError) Error() string {
@@ -360,9 +360,9 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		log.Printf("Not found: Url %q, suggesting %q", r.URL.Path, choices)
 
 		return "", &NotFoundError{
-			Manpage: name,
-			Choices: choices,
-		        Suites:  i.ProductNames}
+			Manpage:  name,
+			Choices:  choices,
+		        Products: i.ProductNames}
 	}
 	log.Printf("Found: Query %q -> Url %q", r.URL.Path, filtered[0].ServingPath(suffix))
 
