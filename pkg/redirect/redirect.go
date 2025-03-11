@@ -215,7 +215,6 @@ func (i Index) Narrow(acceptLang string, query, referrer IndexEntry, entries []I
 		return nil
 	}
 	if fullyQualified() {
-		log.Printf("fullyQualified (Suite)")
 		return filtered
 	}
 
