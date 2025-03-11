@@ -6,14 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync/atomic"
-	"syscall"
 
 	"github.com/thkukuk/rpm2docserv/pkg/commontmpl"
 	"github.com/thkukuk/rpm2docserv/pkg/convert"
@@ -87,154 +85,39 @@ func (b breadcrumbs) ToJSON() template.JS {
 
 var commonTmpls = commontmpl.MustParseCommonTmpls()
 
-type renderingMode int
-
-const (
-	regularFiles renderingMode = iota
-	symlinks
-)
-
 // listManpages lists all files in dir (non-recursively) and returns a map from
 // filename (within dir) to *manpage.Meta.
-func listManpages(dir string) (map[string]*manpage.Meta, error) {
+func listManpages(product string, pkg string, gv *globalView) (map[string]*manpage.Meta, error) {
 	manpageByName := make(map[string]*manpage.Meta)
 
-	files, err := os.Open(dir)
-	if err != nil {
-		return nil, err
-	}
-	defer files.Close()
-
-	var predictedEOF bool
-	for {
-		if predictedEOF {
-			break
-		}
-
-		names, err := files.Readdirnames(2048)
-		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				// We avoid an additional stat syscalls for each
-				// binary package directory by just optimistically
-				// calling readdir and handling the ENOTDIR error.
-				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
-					return nil, nil
-				}
-				return nil, err
+	for _, x := range gv.xref {
+                for _, m := range x {
+			if m.Package.Product == product && m.Package.Binarypkg == pkg {
+				manpageByName[m.Name+"."+m.Section+"."+m.Language] = m
 			}
-		}
-
-		// When len(names) < 2048 the next Readdirnames() call will
-		// result in io.EOF and can be skipped to reduce getdents(2)
-		// syscalls by half.
-		predictedEOF = len(names) < 2048
-
-		for _, fn := range names {
-			if !strings.HasSuffix(fn, ".gz") ||
-				strings.HasSuffix(fn, ".html.gz") {
-				continue
-			}
-			full := filepath.Join(dir, fn)
-
-			m, err := manpage.FromServingPath(*servingDir, full)
-			if err != nil {
-				// If we run into this case, our code cannot correctly
-				// interpret the result of ServingPath().
-				log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
-				continue
-			}
-
-			manpageByName[fn] = m
 		}
 	}
 	return manpageByName, nil
 }
 
-func renderDirectoryIndex(dir string, gv globalView) error {
-	manpageByName, err := listManpages(dir)
-	if err != nil {
-		return err
-	}
+// walkManContents walks over all entries in dir and send a renderJob for each file
+func walkManContents(ctx context.Context, renderChan chan<- renderJob, product string, pkg string, gv *globalView) error {
 
-	if len(manpageByName) == 0 {
-		log.Printf("WARNING: empty directory %q, not generating package index", dir)
-		return nil
-	}
-
-	return renderPkgindex(filepath.Join(dir, "index.html"), manpageByName, gv)
-}
-
-// walkManContents walks over all entries in dir and, depending on mode, does:
-// 1. send a renderJob for each regular file
-// 2. send a renderJob for each symlink
-func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir string, mode renderingMode, gv globalView) error {
-	// the invariant is: each file ending in .gz must have a corresponding .html.gz file
-	// the .html.gz must have a modtime that is >= the modtime of the .gz file
-
-	files, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer files.Close()
-
-	var predictedEOF bool
-	for {
-		if predictedEOF {
-			break
-		}
-
-		names, err := files.Readdirnames(2048)
-		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				// We avoid an additional stat syscalls for each
-				// binary package directory by just optimistically
-				// calling readdir and handling the ENOTDIR error.
-				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
-					return nil
-				}
-				return err
-			}
-		}
-
-		// When len(names) < 2048 the next Readdirnames() call will
-		// result in io.EOF and can be skipped to reduce getdents(2)
-		// syscalls by half.
-		predictedEOF = len(names) < 2048
-
-		for _, fn := range names {
-			if !strings.HasSuffix(fn, ".gz") ||
-				strings.HasSuffix(fn, ".html.gz") {
+	for _, x := range gv.xref {
+                for _, m := range x {
+			if m.Package.Product != product || m.Package.Binarypkg != pkg {
 				continue
 			}
-			full := filepath.Join(dir, fn)
+
+			fn := m.Name+"."+m.Section+"."+m.Language+".gz"
+			full := filepath.Join(*servingDir, product, pkg, fn)
 
 			st, err := os.Lstat(full)
 			if err != nil {
 				continue
 			}
 
-			symlink := st.Mode()&os.ModeSymlink != 0
-
-			if !symlink {
-				atomic.AddUint64(&gv.stats.ManpageBytes, uint64(st.Size()))
-			}
-
-			if mode == regularFiles && symlink ||
-				mode == symlinks && !symlink {
-				continue
-			}
-
-			m, err := manpage.FromServingPath(*servingDir, full)
-			if err != nil {
-				// If we run into this case, our code cannot correctly
-				// interpret the result of ServingPath().
-				log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
-				continue
-			}
+			atomic.AddUint64(&gv.stats.ManpageBytes, uint64(st.Size()))
 
 			versions := gv.xref[m.Name]
 			// Replace m with its corresponding entry in versions
@@ -247,25 +130,15 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 				}
 			}
 
-			var reuse string
-			if symlink {
-				link, err := os.Readlink(full)
-				if err == nil {
-					resolved := filepath.Join(dir, link)
-					reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
-				}
-			}
-
-			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
+			n := strings.TrimSuffix(full, ".gz") + ".html.gz"
 			select {
 				case renderChan <- renderJob{
-					dest:     filepath.Join(dir, n),
+					dest:     n,
 					src:      full,
 					meta:     m,
 					versions: versions,
 					xref:     gv.xref,
 					modTime:  st.ModTime(),
-					reuse:    reuse,
 				}:
 			case <-ctx.Done():
 				break
@@ -276,124 +149,92 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 	return nil
 }
 
-func walkContents(ctx context.Context, renderChan chan<- renderJob, gv globalView) error {
+func walkProductContents(ctx context.Context, renderChan chan<- renderJob, product string, binarypkgs []string, gv *globalView) error {
 
-	suitedirs, err := os.ReadDir(*servingDir)
+	var wg errgroup.Group
+	for _, pkg := range binarypkgs {
+
+		wg.Go(func() error {
+			var err error
+			// Render all regular files first
+			err = walkManContents(ctx, renderChan, product, pkg, gv)
+			if err != nil {
+				return err
+			}
+
+			// and finally render the package index files
+			if err := writeBinaryPkgIndex(product, pkg, gv); err != nil {
+				return err
+			}
+
+			return nil
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+// This function creates the index.html for product/binarypkg
+func writeBinaryPkgIndex(product string, binarypkg string, gv *globalView) error {
+	manpageByName, err := listManpages(product, binarypkg, gv)
 	if err != nil {
 		return err
 	}
-	for _, sfi := range suitedirs {
-		if !sfi.IsDir() {
-			continue
-		}
-		if !gv.suites[sfi.Name()] {
-			continue
-		}
-		bins, err := os.Open(filepath.Join(*servingDir, sfi.Name()))
-		if err != nil {
-			return err
-		}
-		defer bins.Close()
 
-		for {
-			names, err := bins.Readdirnames(*manwalkConcurrency)
-			if err != nil {
-				if err == io.EOF {
-					break
-				} else {
-					return err
-				}
-			}
-
-			var wg errgroup.Group
-			for _, bfn := range names {
-				if bfn == "sourcesWithManpages.txt.gz" ||
-					bfn == "idex.html" ||
-					bfn == "index.html.gz" ||
-					bfn == "sitemap.xml.gz" ||
-					bfn == ".nobackup" {
-					continue
-				}
-
-				bfn := bfn // copy
-				dir := filepath.Join(*servingDir, sfi.Name(), bfn)
-				wg.Go(func() error {
-					var err error
-					// Render all regular files first
-					err = walkManContents(ctx, renderChan, dir, regularFiles, gv)
-					if err != nil {
-						return err
-					}
-
-					// then render all symlinks, re-using the rendered fragments
-					err = walkManContents(ctx, renderChan, dir, symlinks, gv)
-					if err != nil {
-						return err
-					}
-
-					// and finally render the package index files which need to
-					// consider both regular files and symlinks.
-					if err := renderDirectoryIndex(dir, gv); err != nil {
-						return err
-					}
-
-					return nil
-				})
-			}
-			if err := wg.Wait(); err != nil {
-				return err
-			}
-		}
-		bins.Close()
-
+	if len(manpageByName) == 0 {
+		log.Printf("WARNING: empty directory %s/%s/%s, not generating package index",
+			*servingDir, product, binarypkg)
+		return nil
 	}
-	return nil
+
+	return renderPkgIndex(filepath.Join(*servingDir, product, binarypkg, "index.html"), manpageByName, gv)
 }
 
-func writeSourceIndex(gv globalView) error {
+// This function creates the index.html for product/src:package where the
+// manpage links point to the manual pages in the binary package directory
+func writeSourcePkgIndex(product string, gv *globalView) error {
 	// Partition by product for reduced memory usage and better locality of file
 	// system access
-	for suite := range gv.suites {
-		binariesBySource := make(map[string][]string)
-		for _, p := range gv.pkgs {
-			if p.suite == suite {
-				binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
+	binariesBySource := make(map[string][]string)
+	for _, p := range gv.pkgs {
+		if p.suite == product {
+			binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
+		}
+	}
+
+	for src, binaries := range binariesBySource {
+		srcDir := filepath.Join(*servingDir, product, "src:"+src)
+
+		// Aggregate manpages of all binary packages for this source package
+		manpages := make(map[string]*manpage.Meta)
+		for _, binary := range binaries {
+			m, err := listManpages(product, binary, gv)
+			if err != nil {
+				return err
+			}
+			for k, v := range m {
+				manpages[k] = v
 			}
 		}
+		if len(manpages) == 0 {
+			continue // The entire source package does not contain any manpages.
+		}
 
-		for src, binaries := range binariesBySource {
-			srcDir := filepath.Join(*servingDir, suite, "src:"+src)
-
-			// Aggregate manpages of all binary packages for this source package
-			manpages := make(map[string]*manpage.Meta)
-			for _, binary := range binaries {
-				m, err := listManpages(filepath.Join(*servingDir, suite, binary))
-				if err != nil {
-					if os.IsNotExist(err) {
-						continue // The package might not contain any manpages.
-					}
-					return err
-				}
-				for k, v := range m {
-					manpages[k] = v
-				}
-			}
-			if len(manpages) == 0 {
-				continue // The entire source package does not contain any manpages.
-			}
-
-			if err := os.MkdirAll(srcDir, 0755); err != nil {
-				return err
-			}
-			if err := renderSrcPkgIndex(filepath.Join(srcDir, "index.html"), src, manpages, gv); err != nil {
-				return err
-			}
+		if err := os.MkdirAll(srcDir, 0755); err != nil {
+			return err
+		}
+		if err := renderSrcPkgIndex(filepath.Join(srcDir, "index.html"), src, manpages, gv); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func renderAll(gv globalView) error {
+func renderAll(gv *globalView) error {
 	log.Printf("Preparing inverted maps")
 
 	eg, ctx := errgroup.WithContext(context.Background())
@@ -415,7 +256,7 @@ func renderAll(gv globalView) error {
 			}
 
 			for r := range renderChan {
-				n, err := rendermanpage(gzipw, converter, r, gv)
+				n, err := rendermanpage(gzipw, converter, r, *gv)
 				if err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file
@@ -430,30 +271,19 @@ func renderAll(gv globalView) error {
 		})
 	}
 
-	if err := walkContents(ctx, renderChan, gv); err != nil {
-		return err
-	}
-
-	close(renderChan)
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-
-	if err := writeSourceIndex(gv); err != nil {
-		return fmt.Errorf("writing source index: %v", err)
-	}
-
 	for _, product := range productList {
 		if !gv.suites[product] {
 			log.Printf("ERROR: %s not known in gv.suites (%q)", product, gv.suites)
 			continue
 		}
 
+		log.Printf("Start rendering %s", product)
+
 		b_pkgdirs := make(map[string]bool)
 		b_srcpkgdirs := make(map[string]bool)
 		for _, x := range gv.xref {
 			for _, m := range x {
-				if (product == m.Package.Suite) {
+				if (product == m.Package.Product) {
 					b_pkgdirs[m.Package.Binarypkg] = true
 					b_srcpkgdirs["src:" + m.Package.Sourcepkg] = true
 				}
@@ -477,9 +307,22 @@ func renderAll(gv globalView) error {
 			continue
 		}
 
+		if err := walkProductContents(ctx, renderChan, product, pkgdirs, gv); err != nil {
+			return err
+		}
+
+		if err := writeSourcePkgIndex(product, gv); err != nil {
+			return fmt.Errorf("writing source index for %s: %v", product, err)
+		}
+
 		if err := renderProductContents(filepath.Join(*servingDir, product, "index.html",), product, pkgdirs, srcpkgdirs, gv); err != nil {
 			return err
 		}
+	}
+
+	close(renderChan)
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	return nil

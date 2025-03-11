@@ -94,7 +94,7 @@
         <div class="input-group">
           <input class="form-control" type="text" name="q" placeholder="manpage name" required>
           {{ if .Meta -}}
-          <input type="hidden" name="suite" value="{{ .Meta.Package.Suite }}">
+          <input type="hidden" name="suite" value="{{ .Meta.Package.Product }}">
           <input type="hidden" name="binarypkg" value="{{ .Meta.Package.Binarypkg }}">
           <input type="hidden" name="section" value="{{ .Meta.Section }}">
           <input type="hidden" name="language" value="{{ .Meta.Language }}">

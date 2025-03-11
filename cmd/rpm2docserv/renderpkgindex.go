@@ -22,7 +22,7 @@ func mustParseSrcPkgindexTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("srcpkgindex").Parse(bundled.Asset("srcpkgindex.tmpl")))
 }
 
-func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv globalView) error {
+func renderPkgIndex(dest string, manpageByName map[string]*manpage.Meta, gv *globalView) error {
 	var first *manpage.Meta
 	for _, m := range manpageByName {
 		first = m
@@ -59,7 +59,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 			Rpm2docservVersion: rpm2docservVersion,
 			IsOffline:      isOffline,
 			Breadcrumbs: breadcrumbs{
-				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},
+				{fmt.Sprintf("/%s/index.html", first.Package.Product), first.Package.Product},
 				{"", first.Package.Binarypkg},
 			},
 			First:         first,
@@ -72,7 +72,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta, gv glob
 }
 
 func renderSrcPkgIndex(dest string, src string,
-	               manpageByName map[string]*manpage.Meta, gv globalView) error {
+	               manpageByName map[string]*manpage.Meta, gv *globalView) error {
 	var first *manpage.Meta
 	for _, m := range manpageByName {
 		first = m
@@ -110,7 +110,7 @@ func renderSrcPkgIndex(dest string, src string,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 			Breadcrumbs: breadcrumbs{
-				{fmt.Sprintf("/%s/index.html", first.Package.Suite), first.Package.Suite},
+				{fmt.Sprintf("/%s/index.html", first.Package.Product), first.Package.Product},
 				{"", "src:" + src},
 			},
 			First:         first,

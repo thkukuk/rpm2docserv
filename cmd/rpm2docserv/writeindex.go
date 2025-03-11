@@ -12,7 +12,7 @@ import (
 
 // writeIndex serializes an index for the redirect package (used in
 // docserv-auxserver) to dest.
-func writeIndex(dest string, gv globalView) error {
+func writeIndex(dest string, gv *globalView) error {
 	idx := &pb.Index{
 		Entry: make([]*pb.IndexEntry, 0, len(gv.xref)),
 	}
@@ -23,7 +23,7 @@ func writeIndex(dest string, gv globalView) error {
 		for _, m := range x {
 			idx.Entry = append(idx.Entry, &pb.IndexEntry{
 				Name:      m.Name,
-				Suite:     m.Package.Suite,
+				Suite:     m.Package.Product,
 				Binarypkg: m.Package.Binarypkg,
 				Section:   m.Section,
 				Language:  m.Language,

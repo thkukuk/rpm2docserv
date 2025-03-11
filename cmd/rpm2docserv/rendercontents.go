@@ -13,7 +13,7 @@ func mustParseContentsTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("contents").Parse(bundled.Asset("contents.tmpl")))
 }
 
-func renderProductContents(dest, productName string, pkgdirs []string, srcpkgdirs []string, gv globalView) error {
+func renderProductContents(dest, productName string, pkgdirs []string, srcpkgdirs []string, gv *globalView) error {
 	if err := renderExec(dest, contentsTmpl, tmplData {
 		Title:          fmt.Sprintf("Manpages of %s", productName),
 		Breadcrumbs: breadcrumbs{

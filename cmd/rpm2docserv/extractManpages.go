@@ -399,7 +399,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
                 found := false
                 x := gv.xref[m.Name]
                 for j := range x {
-                        if suite == x[j].Package.Suite && m.Section == x[j].Section && m.Language == x[j].Language {
+                        if suite == x[j].Package.Product && m.Section == x[j].Section && m.Language == x[j].Language {
                                 srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
                                 err = os.Link(srcf, missing[i].target)
                                 if err != nil {
@@ -413,7 +413,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
 		// second run, relax m.Section and also allow substring matches (e.g. postgresql14-docs, where the .so reference got not adjusted
 		if !found {
 			for j := range x {
-				if suite == x[j].Package.Suite && strings.HasPrefix(x[j].Section, m.Section) && m.Language == x[j].Language {
+				if suite == x[j].Package.Product && strings.HasPrefix(x[j].Section, m.Section) && m.Language == x[j].Language {
 					srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
 					err = os.Link(srcf, missing[i].target)
 					if err != nil {

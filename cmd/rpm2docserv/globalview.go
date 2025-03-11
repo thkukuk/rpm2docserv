@@ -185,7 +185,7 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 				Sourcepkg: pkg.source,
 				Binarypkg: pkg.binarypkg,
 				Version: pkg.version,
-				Suite: pkg.suite,
+				Product: pkg.suite,
 			}
 		}
 	}

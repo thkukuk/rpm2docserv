@@ -188,7 +188,6 @@ type renderJob struct {
 	versions []*manpage.Meta
 	xref     map[string][]*manpage.Meta
 	modTime  time.Time
-	reuse    string
 }
 
 var notYetRenderedSentinel = errors.New("Not yet rendered")
@@ -216,13 +215,13 @@ type manpagePrepData struct {
 	Products       []string
 }
 
-type bySuite []*manpage.Meta
+type byProduct []*manpage.Meta
 
-func (p bySuite) Len() int      { return len(p) }
-func (p bySuite) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p bySuite) Less(i, j int) bool {
-	orderi, oki := sortOrder[p[i].Package.Suite]
-	orderj, okj := sortOrder[p[j].Package.Suite]
+func (p byProduct) Len() int      { return len(p) }
+func (p byProduct) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byProduct) Less(i, j int) bool {
+	orderi, oki := sortOrder[p[i].Package.Product]
+	orderj, okj := sortOrder[p[j].Package.Product]
 	if !oki || !okj {
 		// if we have a known suite, prefer that over the unknown one
 		if oki && !okj {
@@ -231,7 +230,7 @@ func (p bySuite) Less(i, j int) bool {
 		if okj && !oki {
 			return false
 		}
-		return p[i].Package.Suite < p[j].Package.Suite
+		return p[i].Package.Product < p[j].Package.Product
 	}
 	return orderi < orderj
 }
@@ -259,12 +258,6 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		toc       []string
 		renderErr = notYetRenderedSentinel
 	)
-	if job.reuse != "" {
-		content, toc, renderErr = reuse(job.reuse)
-		if renderErr != nil {
-			log.Printf("WARNING: re-using %q failed: %v", job.reuse, renderErr)
-		}
-	}
 	if renderErr != nil {
 		content, toc, renderErr = convertFile(converter, job.src, func(ref string) string {
 			idx := strings.LastIndex(ref, "(")
@@ -282,7 +275,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 				if r.MainSection() != section {
 					continue
 				}
-				if r.Package.Suite != meta.Package.Suite {
+				if r.Package.Product != meta.Package.Product {
 					continue
 				}
 				filtered = append(filtered, r)
@@ -315,11 +308,11 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		altVersions = append(altVersions, v)
 	}
 
-	sort.Stable(bySuite(altVersions))
+	sort.Stable(byProduct(altVersions))
 
 	bySection := make(map[string][]*manpage.Meta)
 	for _, v := range job.versions {
-		if v.Package.Suite != meta.Package.Suite {
+		if v.Package.Product != meta.Package.Product {
 			continue
 		}
 		bySection[v.Section] = append(bySection[v.Section], v)
@@ -337,7 +330,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 			continue
 		}
 
-		if v.Package.Suite != meta.Package.Suite {
+		if v.Package.Product != meta.Package.Product {
 			continue
 		}
 
@@ -363,7 +356,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		if v.Section != meta.Section {
 			continue
 		}
-		if v.Package.Suite != meta.Package.Suite {
+		if v.Package.Product != meta.Package.Product {
 			continue
 		}
 		if conflicting[v.Package.Binarypkg] {
@@ -423,8 +416,8 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		IsOffline:      isOffline,
 		Rpm2docservVersion: rpm2docservVersion,
 		Breadcrumbs: breadcrumbs{
-			{fmt.Sprintf("/%s/index.html", meta.Package.Suite), meta.Package.Suite},
-			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
+			{fmt.Sprintf("/%s/index.html", meta.Package.Product), meta.Package.Product},
+			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Product, meta.Package.Binarypkg), meta.Package.Binarypkg},
 			{"", shorttitle},
 		},
 		FooterExtra: template.HTML(footerExtra.String()),

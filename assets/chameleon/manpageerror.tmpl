@@ -38,9 +38,9 @@
     <ul class="list-group list-group-flush">
     {{ range $idx, $man := .AltVersions }}
       <li class="list-group-item
-      {{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
+      {{- if eq $man.Package.Product $.Meta.Package.Product }} active{{- end -}}
       ">
-        <a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
+        <a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Product }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
       </li>
     {{ end }}
     </ul>

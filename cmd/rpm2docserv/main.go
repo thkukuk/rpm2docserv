@@ -125,17 +125,16 @@ func logic(products []Suites) error {
 	// Stage 4: all man pages are rendered into an HTML representation
 	// using mandoc(1), directory index files are rendered, contents
 	// files are rendered.
-	if err := renderAll(globalView); err != nil {
+	if err := renderAll(&globalView); err != nil {
 		return fmt.Errorf("rendering manpages: %v", err)
 	}
-	log.Printf("Rendered all manpages, writing index")
 
 	stage5 := time.Now()
 
 	// Stage 5: write the index after all rendering is complete.
 	path := strings.Replace(*indexPath, "<serving_dir>", *servingDir, -1)
 	log.Printf("Writing docserv-auxserver index to %q", path)
-	if err := writeIndex(path, globalView); err != nil {
+	if err := writeIndex(path, &globalView); err != nil {
 		return fmt.Errorf("writing index: %v", err)
 	}
 
@@ -164,7 +163,6 @@ func logic(products []Suites) error {
 		}
 		return nil
 	})
-	return nil
 }
 
 func read_yaml_config(conffile string) (Config, error) {

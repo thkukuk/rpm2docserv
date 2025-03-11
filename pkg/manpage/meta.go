@@ -19,8 +19,8 @@ type PkgMeta struct {
 	// Version is used by the templates when rendering.
 	Version version.Version
 
-	// Suite is the product in which this binary package was found.
-	Suite string
+	// Product is the product in which this binary package was found.
+	Product string
 }
 
 func (p *PkgMeta) SameBinary(o *PkgMeta) bool {
@@ -34,7 +34,7 @@ type Meta struct {
 	// Name is e.g. “w3m”, or “systemd.service”.
 	Name string
 
-	// Package is the Debian binary package from which this manpage
+	// Package is the binary package from which this manpage
 	// was extracted.
 	Package *PkgMeta
 
@@ -144,7 +144,7 @@ func FromServingPath(servingDir, path string) (*Meta, error) {
 		Name: bparts[0],
 		Package: &PkgMeta{
 			Binarypkg: pparts[1],
-			Suite:     pparts[0],
+			Product:     pparts[0],
 		},
 		Section:     bparts[1],
 		Language:    bparts[2],
@@ -157,18 +157,18 @@ func (m *Meta) String() string {
 }
 
 func (m *Meta) ServingPath() string {
-	return m.Package.Suite + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section + "." + m.Language
+	return m.Package.Product + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section + "." + m.Language
 }
 
 // RawPath returns the path to access the raw manpage equivalent of
 // what is currently being served, i.e. locked to the current
 // language.
 func (m *Meta) RawPath() string {
-	return m.Package.Suite + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section + "." + m.Language + ".gz"
+	return m.Package.Product + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section + "." + m.Language + ".gz"
 }
 
 func (m *Meta) PermaLink() string {
-	return m.Package.Suite + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section
+	return m.Package.Product + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section
 }
 
 func (m *Meta) MainSection() string {
