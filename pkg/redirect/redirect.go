@@ -37,7 +37,6 @@ type Index struct {
 	ProductMapping map[string]string
 }
 
-// XXX bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
 func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 	if t == nil {
 		return options[0]
