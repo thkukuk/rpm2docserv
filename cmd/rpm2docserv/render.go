@@ -14,7 +14,6 @@ import (
 	"sync/atomic"
 
 	"github.com/thkukuk/rpm2docserv/pkg/commontmpl"
-	"github.com/thkukuk/rpm2docserv/pkg/convert"
 	"github.com/thkukuk/rpm2docserv/pkg/manpage"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
@@ -241,12 +240,6 @@ func renderAll(gv *globalView) error {
 	renderChan := make(chan renderJob)
 	for i := 0; i < *renderConcurrency; i++ {
 		eg.Go(func() error {
-			converter, err := convert.NewProcess()
-			if err != nil {
-				return err
-			}
-			defer converter.Kill()
-
 			// NOTE(stapelberg): gzip’s decompression phase takes the same
 			// time, regardless of compression level. Hence, we invest the
 			// maximum CPU time once to achieve the best compression.
@@ -256,7 +249,7 @@ func renderAll(gv *globalView) error {
 			}
 
 			for r := range renderChan {
-				n, err := rendermanpage(gzipw, converter, r, *gv)
+				n, err := rendermanpage(gzipw, r, *gv)
 				if err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file

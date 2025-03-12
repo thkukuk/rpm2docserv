@@ -103,7 +103,7 @@ func mustParseManpagefooterextraTmpl() *template.Template {
 		Parse(bundled.Asset("manpagefooterextra.tmpl")))
 }
 
-func convertFile(converter *convert.Process, src string, resolve func(ref string) string) (doc string, toc []string, err error) {
+func convertFile(src string, resolve func(ref string) string) (doc string, toc []string, err error) {
 	f, err := os.Open(src)
 	if err != nil {
 		return "", nil, err
@@ -118,7 +118,7 @@ func convertFile(converter *convert.Process, src string, resolve func(ref string
 		return "", nil, err
 	}
 	defer r.Close()
-	out, toc, err := converter.ToHTML(r, resolve)
+	out, toc, err := convert.ToHTML(r, resolve)
 	if err != nil {
 		return "", nil, fmt.Errorf("convert(%q): %v", src, err)
 	}
@@ -247,7 +247,7 @@ func (p byBinarypkg) Len() int           { return len(p) }
 func (p byBinarypkg) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p byBinarypkg) Less(i, j int) bool { return p[i].Package.Binarypkg < p[j].Package.Binarypkg }
 
-func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView) (*template.Template, manpagePrepData, error) {
+func rendermanpageprep(job renderJob, gv globalView) (*template.Template, manpagePrepData, error) {
 	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
@@ -259,7 +259,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob, gv globalView)
 		renderErr = notYetRenderedSentinel
 	)
 	if renderErr != nil {
-		content, toc, renderErr = convertFile(converter, job.src, func(ref string) string {
+		content, toc, renderErr = convertFile(job.src, func(ref string) string {
 			idx := strings.LastIndex(ref, "(")
 			if idx == -1 {
 				return ""
@@ -443,8 +443,8 @@ func (c *countingWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob, gv globalView) (uint64, error) {
-	t, data, err := rendermanpageprep(converter, job, gv)
+func rendermanpage(gzipw *gzip.Writer, job renderJob, gv globalView) (uint64, error) {
+	t, data, err := rendermanpageprep(job, gv)
 	if err != nil {
 		return 0, err
 	}

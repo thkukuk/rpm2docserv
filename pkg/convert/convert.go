@@ -404,8 +404,8 @@ func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) e
 //
 // resolve, if non-nil, will be called to resolve a reference (like
 // “rm(1)”) into a URL.
-func (p *Process) ToHTML(r io.Reader, resolve func(ref string) string) (doc string, toc []string, err error) {
-	stdout, stderr, err := p.mandoc(r)
+func ToHTML(r io.Reader, resolve func(ref string) string) (doc string, toc []string, err error) {
+	stdout, stderr, err := mandoc(r)
 	if stderr != "" {
 		return "", nil, fmt.Errorf("mandoc failed: %v", stderr)
 	}
