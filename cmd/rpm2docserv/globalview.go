@@ -18,7 +18,7 @@ import (
 type pkgEntry struct {
         source     string
 	sourcerpm  string
-	suite      string
+	product    string
         binarypkg  string
         arch       string
         filename   string
@@ -38,13 +38,15 @@ type globalView struct {
 	// pkgs contains all binary packages we know of.
 	pkgs []*pkgEntry
 
-	// Suites is the list of Product Names
-        suites map[string]bool
+	// list of product mames for quick check of existence
+        products map[string]bool
 
-        // idxSuites maps codename, suite and command-line argument to suite (as in
-        // suites).
+	// sorted list of product names
+	productList []string
+
+        // productMapping maps codename and products
 	// e.g. map[MicroOS:Tumbleweed Tumbleweed:Tumbleweed]
-        idxSuites map[string]string
+        productMapping map[string]string
 
 	// xref maps from manpage.Meta.Name (e.g. “w3m” or “systemd.service”) to
 	// the corresponding manpage.Meta.
@@ -54,23 +56,23 @@ type globalView struct {
 	start time.Time
 }
 
-type bySuitePkgVer []*pkgEntry
-func (p bySuitePkgVer) Len() int      { return len(p) }
-func (p bySuitePkgVer) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p bySuitePkgVer) Less(i, j int) bool {
-	if p[i].suite != p[j].suite {
-		// if the suite is different, sort according to product name
-		orderi, oki := sortOrder[p[i].suite]
-		orderj, okj := sortOrder[p[j].suite]
+type byProductPkgVer []*pkgEntry
+func (p byProductPkgVer) Len() int      { return len(p) }
+func (p byProductPkgVer) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byProductPkgVer) Less(i, j int) bool {
+	if p[i].product != p[j].product {
+		// if the product is different, sort according to product name
+		orderi, oki := sortOrder[p[i].product]
+		orderj, okj := sortOrder[p[j].product]
 		if !oki || !okj {
-			// if we have a known suite, prefer that over the unknown one
+			// if we have a known product, prefer that over the unknown one
 			if oki && !okj {
 				return true
 			}
 			if okj && !oki {
 				return false
 			}
-			return p[i].suite < p[j].suite
+			return p[i].product < p[j].product
 		}
 		return orderi < orderj
 	}
@@ -81,6 +83,24 @@ func (p bySuitePkgVer) Less(i, j int) bool {
 	return p[i].binarypkg < p[j].binarypkg
 }
 
+type byProductStr []string
+func (p byProductStr) Len() int      { return len(p) }
+func (p byProductStr) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byProductStr) Less(i, j int) bool {
+	orderi, oki := sortOrder[p[i]]
+	orderj, okj := sortOrder[p[j]]
+	if !oki || !okj {
+		// if we have know a suite, prefer that over the unknown one
+		if oki && !okj {
+			return true
+		}
+		if okj && !oki {
+			return false
+		}
+		return p[i] < p[j]
+	}
+	return orderi < orderj
+}
 
 func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*manpage.Meta, filename string, key string) error {
         if _, ok := latestVersion[key]; !ok {
@@ -110,31 +130,33 @@ func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*m
 }
 
 // go through the cache directory, find all RPMs and build a pkg entry for it
-func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
+func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 	var stats stats
 	res := globalView{
-		suites:        make(map[string]bool, len(suites)),
-		idxSuites:     make(map[string]string, len(suites)),
-		xref:          make(map[string][]*manpage.Meta),
-		stats:         &stats,
-		start:         start,
+		products:       make(map[string]bool, len(products)),
+		productList:    make([]string, 0, len(products)),
+		productMapping: make(map[string]string, len(products)),
+		xref:           make(map[string][]*manpage.Meta),
+		stats:          &stats,
+		start:          start,
 	}
 
-	for _, suite := range suites {
+	for _, product := range products {
 
-		res.suites[suite.Name] = true
-		res.idxSuites[suite.Name] = suite.Name
-		for _, alias := range suite.Alias {
-			res.idxSuites[alias] = suite.Name
+		res.productList = append(res.productList, product.Name)
+		res.products[product.Name] = true
+		res.productMapping[product.Name] = product.Name
+		for _, alias := range product.Alias {
+			res.productMapping[alias] = product.Name
 		}
 
 		// Walk recursivly through the full cache directory, search all
 		// RPMs and store the meta data for them.
-		for i := range suite.Cache {
+		for i := range product.Cache {
 			if *verbose {
-				log.Printf("Read %q from %q...", suite.Cache[i], suite.Name)
+				log.Printf("Read %q from %q...", product.Cache[i], product.Name)
 			}
-			err := filepath.WalkDir(suite.Cache[i],
+			err := filepath.WalkDir(product.Cache[i],
 				func(path string, di fs.DirEntry, err error) error {
 					if err != nil {
 						return err
@@ -142,7 +164,7 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 					if strings.HasSuffix(path, ".rpm") {
 						// Add RPM to package list
 						pkg := new(pkgEntry)
-						pkg.suite = suite.Name
+						pkg.product = product.Name
 						pkg.filename = path
 
 						var rpmversion, rpmrelease string
@@ -166,26 +188,29 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 					return nil
 				})
 			if err != nil {
-				return res, fmt.Errorf("WalkDir(%q): %v", suite.Cache[i], err)
+				return res, fmt.Errorf("WalkDir(%q): %v", product.Cache[i], err)
 			}
 		}
 	}
 
+	// sort product list according to product sort order.
+	sort.Stable(byProductStr(res.productList))
+
 	// sort the package list, so that packages with a higher version comes first
-	sort.Stable(bySuitePkgVer(res.pkgs))
+	sort.Stable(byProductPkgVer(res.pkgs))
 
 	// build an index with the latest version of a package,
 	// ignoring all lower versions of the same package
 	latestVersion := make(map[string]*manpage.PkgMeta)
 	for _, pkg := range res.pkgs {
-		key := pkg.suite + "/" + pkg.binarypkg
+		key := pkg.product + "/" + pkg.binarypkg
 		if _, exists := latestVersion[key]; !exists {
 			latestVersion[key] = &manpage.PkgMeta{
 				Filename: pkg.filename,
 				Sourcepkg: pkg.source,
 				Binarypkg: pkg.binarypkg,
 				Version: pkg.version,
-				Product: pkg.suite,
+				Product: pkg.product,
 			}
 		}
 	}
@@ -203,7 +228,7 @@ func buildGlobalView(suites []Suites, start time.Time) (globalView, error) {
 			continue
 		}
 
-		key := p.suite + "/" + p.binarypkg
+		key := p.product + "/" + p.binarypkg
 		for _, f := range p.manpageList {
 			if err := markPresent(latestVersion, res.xref, strings.TrimPrefix(f, manPrefix), key); err != nil {
 				knownIssues[key] = append(knownIssues[key], err)

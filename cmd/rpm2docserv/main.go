@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 	_ "net/http/pprof"
@@ -19,7 +18,7 @@ import (
 	"github.com/thkukuk/rpm2docserv/pkg/write"
 )
 
-type Suites struct {
+type Product struct {
 	Name     string   `yaml:"name"`
 	Cache    []string `yaml:"cache,omitempty"`
 	Packages []string `yaml:"packages,omitempty"`
@@ -27,17 +26,17 @@ type Suites struct {
 }
 
 type Config struct {
-	ProjectName string `yaml:"projectname,omitempty"`
-	ProjectUrl  string `yaml:"projecturl,omitempty"`
-	LogoUrl     string `yaml:"logourl,omitempty"`
-	AssetsDir   string `yaml:"assets,omitempty"`
-	ServingDir  string `yaml:"servingdir"`
-	IndexPath   string `yaml:"auxindex"`
-	Download    string `yaml:"download"`
-	IsOffline   bool   `yaml:"offline,omitempty"`
-	BaseUrl     string `yaml:"baseurl,omitempty"`
-	Products    []Suites `yaml:"products"`
-	SortOrder   []string `yaml:"sortorder"`
+	ProjectName string    `yaml:"projectname,omitempty"`
+	ProjectUrl  string    `yaml:"projecturl,omitempty"`
+	LogoUrl     string    `yaml:"logourl,omitempty"`
+	AssetsDir   string    `yaml:"assets,omitempty"`
+	ServingDir  string    `yaml:"servingdir"`
+	IndexPath   string    `yaml:"auxindex"`
+	Download    string    `yaml:"download"`
+	IsOffline   bool      `yaml:"offline,omitempty"`
+	BaseUrl     string    `yaml:"baseurl,omitempty"`
+	Products    []Product `yaml:"products"`
+	SortOrder   []string  `yaml:"sortorder"`
 }
 
 var (
@@ -80,14 +79,13 @@ var (
 	isOffline = false
 	projectName string
         projectUrl  string
-	productList []string
 	logoUrl     string
 )
 
 // use go build -ldflags "-X main.rpm2docservVersion=<version>" to set the version
 var rpm2docservVersion = "HEAD"
 
-func logic(products []Suites) error {
+func logic(products []Product) error {
 	start := time.Now()
 
 	// Stage 1: Download specified packages and their dependencies
@@ -138,7 +136,7 @@ func logic(products []Suites) error {
 		return fmt.Errorf("writing index: %v", err)
 	}
 
-	if err := renderAux(*servingDir, globalView); err != nil {
+	if err := renderAux(*servingDir, &globalView); err != nil {
 		return fmt.Errorf("rendering aux files: %v", err)
 	}
 
@@ -158,7 +156,7 @@ func logic(products []Suites) error {
 	fmt.Printf("wall-clock runtime (s):   %d\n", int(finish.Sub(start).Seconds()))
 
 	return write.Atomically(filepath.Join(*servingDir, "metrics.txt"), false, func(w io.Writer) error {
-		if err := writeMetrics(w, globalView, start); err != nil {
+		if err := writeMetrics(w, &globalView, start); err != nil {
 			return fmt.Errorf("writing metrics: %v", err)
 		}
 		return nil
@@ -182,7 +180,7 @@ func read_yaml_config(conffile string) (Config, error) {
 }
 
 func main() {
-	var products []Suites
+	var products []Product
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
@@ -231,17 +229,12 @@ func main() {
 		logoUrl = config.LogoUrl
 		products = config.Products
 	} else {
-		products = make([]Suites, 1)
+		products = make([]Product, 1)
 		products[0].Name = "manpages"
 		products[0].Cache = append(products[0].Cache, *cacheDir)
 		products[0].Packages = strings.Split(*pkg2Render, ",")
 	}
 
-	productList = make([]string, 0, len(products))
-	for _, product := range products {
-		productList = append(productList, product.Name)
-	}
-	sort.Stable(byProductStr(productList))
 
 	if *injectAssets != "" {
 		if err := bundled.Inject(*injectAssets); err != nil {

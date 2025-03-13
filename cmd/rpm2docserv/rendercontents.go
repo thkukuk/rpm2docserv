@@ -14,7 +14,7 @@ func mustParseContentsTmpl() *template.Template {
 }
 
 func renderProductContents(dest, productName string, pkgdirs []string, srcpkgdirs []string, gv *globalView) error {
-	if err := renderExec(dest, contentsTmpl, tmplData {
+	if err := renderExec(dest, gv, contentsTmpl, tmplData {
 		Title:          fmt.Sprintf("Manpages of %s", productName),
 		Breadcrumbs: breadcrumbs{
 			{"", productName},

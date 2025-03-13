@@ -19,7 +19,7 @@ func getAllContents(pkgs []*pkgEntry) (error) {
 
 		// skip binary packages with a lower version, we only use the manpages
 		// from the highest one
-		if i > 0 && pkgs[i].suite == pkgs[i-1].suite &&
+		if i > 0 && pkgs[i].product == pkgs[i-1].product &&
 			pkgs[i].binarypkg == pkgs[i-1].binarypkg {
 			continue
 		}

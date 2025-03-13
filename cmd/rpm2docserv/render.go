@@ -200,7 +200,7 @@ func writeSourcePkgIndex(product string, gv *globalView) error {
 	// system access
 	binariesBySource := make(map[string][]string)
 	for _, p := range gv.pkgs {
-		if p.suite == product {
+		if p.product == product {
 			binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
 		}
 	}
@@ -249,7 +249,7 @@ func renderAll(gv *globalView) error {
 			}
 
 			for r := range renderChan {
-				n, err := rendermanpage(gzipw, r, *gv)
+				n, err := rendermanpage(gzipw, r, gv)
 				if err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file
@@ -264,12 +264,7 @@ func renderAll(gv *globalView) error {
 		})
 	}
 
-	for _, product := range productList {
-		if !gv.suites[product] {
-			log.Printf("ERROR: %s not known in gv.suites (%q)", product, gv.suites)
-			continue
-		}
-
+	for _, product := range gv.productList {
 		log.Printf("Start rendering %s", product)
 
 		b_pkgdirs := make(map[string]bool)

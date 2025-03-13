@@ -66,7 +66,7 @@ func renderPkgIndex(dest string, manpageByName map[string]*manpage.Meta, gv *glo
 			Meta:          first,
 			ManpageByName: manpageByName,
 			Mans:          mans,
-			Products:      productList,
+			Products:      gv.productList,
 		})
 	})
 }
@@ -118,7 +118,7 @@ func renderSrcPkgIndex(dest string, src string,
 			ManpageByName: manpageByName,
 			Mans:          mans,
 			Src:           src,
-			Products:      productList,
+			Products:      gv.productList,
 		})
 	})
 }

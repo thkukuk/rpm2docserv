@@ -39,7 +39,7 @@ rpm2docserv_last_successful_run {{ .LastSuccessfulRun }}
 
 var metricsTmpl = template.Must(template.New("metrics").Parse(metricsTmplContent))
 
-func writeMetrics(w io.Writer, gv globalView, start time.Time) error {
+func writeMetrics(w io.Writer, gv *globalView, start time.Time) error {
 	now := time.Now()
 	return metricsTmpl.Execute(w, struct {
 		Packages          int

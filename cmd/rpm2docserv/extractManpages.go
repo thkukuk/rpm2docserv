@@ -248,10 +248,10 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 // We need directories per source RPM to be able to extract conflicting packages.
 // We need all manpages from all subpackages of a Source RPM since symlinks and .so
 // references are going cross packages.
-func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (error) {
+func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) (error) {
 
 	for i := range gv.pkgs {
-		if gv.pkgs[i].suite != suite {
+		if gv.pkgs[i].product != product {
 			continue
 		}
 		if len(gv.pkgs[i].manpageList) == 0 {
@@ -325,7 +325,7 @@ func unpackRPMs(cacheDir string, tmpdir string, suite string, gv *globalView) (e
 	return nil
 }
 
-func extractManpages(cacheDir string, servingDir string, suite string, gv *globalView) (error) {
+func extractManpages(cacheDir string, servingDir string, product string, gv *globalView) (error) {
 
 	var missing []*manLinks
 
@@ -335,13 +335,13 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
 	}
 	defer os.RemoveAll(tmpdir)
 
-	err = unpackRPMs(cacheDir, tmpdir, suite, gv)
+	err = unpackRPMs(cacheDir, tmpdir, product, gv)
 	if err != nil {
 		return err
 	}
 
 	for i := range gv.pkgs {
-		if gv.pkgs[i].suite != suite {
+		if gv.pkgs[i].product != product {
 			continue
 		}
 		if len(gv.pkgs[i].manpageList) == 0 {
@@ -355,7 +355,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
 				continue
 			}
 
-			targetdir := filepath.Join(servingDir, gv.pkgs[i].suite, gv.pkgs[i].binarypkg)
+			targetdir := filepath.Join(servingDir, gv.pkgs[i].product, gv.pkgs[i].binarypkg)
 
 			err = os.MkdirAll(targetdir, 0755)
 			if err != nil {
@@ -399,7 +399,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
                 found := false
                 x := gv.xref[m.Name]
                 for j := range x {
-                        if suite == x[j].Package.Product && m.Section == x[j].Section && m.Language == x[j].Language {
+                        if product == x[j].Package.Product && m.Section == x[j].Section && m.Language == x[j].Language {
                                 srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
                                 err = os.Link(srcf, missing[i].target)
                                 if err != nil {
@@ -413,7 +413,7 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
 		// second run, relax m.Section and also allow substring matches (e.g. postgresql14-docs, where the .so reference got not adjusted
 		if !found {
 			for j := range x {
-				if suite == x[j].Package.Product && strings.HasPrefix(x[j].Section, m.Section) && m.Language == x[j].Language {
+				if product == x[j].Package.Product && strings.HasPrefix(x[j].Section, m.Section) && m.Language == x[j].Language {
 					srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
 					err = os.Link(srcf, missing[i].target)
 					if err != nil {
@@ -435,14 +435,14 @@ func extractManpages(cacheDir string, servingDir string, suite string, gv *globa
 }
 
 func extractManpagesAll(cacheDir string, servingDir string, gv *globalView) (error) {
-	for suite := range gv.suites {
-		// Cleanup directory for suite
-		suitedir := filepath.Join(servingDir, suite)
+	for product := range gv.products {
+		// Cleanup directory for product
+		productdir := filepath.Join(servingDir, product)
 		// XXX error handling!
-		os.RemoveAll(suitedir)
-		os.MkdirAll(suitedir, 0755)
+		os.RemoveAll(productdir)
+		os.MkdirAll(productdir, 0755)
 
-		err := extractManpages(cacheDir, servingDir, suite, gv)
+		err := extractManpages(cacheDir, servingDir, product, gv)
 		if err != nil {
 			return err
 		}

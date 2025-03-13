@@ -44,9 +44,9 @@ func writeIndex(dest string, gv *globalView) error {
 	}
 	sort.Strings(idx.Section)
 
-	idx.Suite = gv.idxSuites
+	idx.Suite = gv.productMapping
 
-	idx.Products = productList
+	idx.Products = gv.productList
 
 	idxb, err := proto.Marshal(idx)
 	if err != nil {

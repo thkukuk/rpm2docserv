@@ -247,7 +247,7 @@ func (p byBinarypkg) Len() int           { return len(p) }
 func (p byBinarypkg) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p byBinarypkg) Less(i, j int) bool { return p[i].Package.Binarypkg < p[j].Package.Binarypkg }
 
-func rendermanpageprep(job renderJob, gv globalView) (*template.Template, manpagePrepData, error) {
+func rendermanpageprep(job renderJob, gv *globalView) (*template.Template, manpagePrepData, error) {
 	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
@@ -258,33 +258,35 @@ func rendermanpageprep(job renderJob, gv globalView) (*template.Template, manpag
 		toc       []string
 		renderErr = notYetRenderedSentinel
 	)
+
+	content, toc, renderErr = convertFile(job.src, func(ref string) string {
+		idx := strings.LastIndex(ref, "(")
+		if idx == -1 {
+			return ""
+		}
+		section := ref[idx+1 : len(ref)-1]
+		name := ref[:idx]
+		related, ok := job.xref[name]
+		if !ok {
+			return ""
+		}
+		filtered := make([]*manpage.Meta, 0, len(related))
+		for _, r := range related {
+			if r.MainSection() != section {
+				continue
+			}
+			if r.Package.Product != meta.Package.Product {
+				continue
+			}
+			filtered = append(filtered, r)
+		}
+		if len(filtered) == 0 {
+			return ""
+		}
+		return commontmpl.BaseURLPath() + "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
+	})
 	if renderErr != nil {
-		content, toc, renderErr = convertFile(job.src, func(ref string) string {
-			idx := strings.LastIndex(ref, "(")
-			if idx == -1 {
-				return ""
-			}
-			section := ref[idx+1 : len(ref)-1]
-			name := ref[:idx]
-			related, ok := job.xref[name]
-			if !ok {
-				return ""
-			}
-			filtered := make([]*manpage.Meta, 0, len(related))
-			for _, r := range related {
-				if r.MainSection() != section {
-					continue
-				}
-				if r.Package.Product != meta.Package.Product {
-					continue
-				}
-				filtered = append(filtered, r)
-			}
-			if len(filtered) == 0 {
-				return ""
-			}
-			return commontmpl.BaseURLPath() + "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
-		})
+		log.Printf("ERROR: Rendering %q failed: %q", job.dest, renderErr)
 	}
 
 	if *verbose {
@@ -432,7 +434,7 @@ func rendermanpageprep(job renderJob, gv globalView) (*template.Template, manpag
 		Ambiguous:   ambiguous,
 		Content:     template.HTML(content),
 		Error:       renderErr,
-		Products:    productList,
+		Products:    gv.productList,
 	}, nil
 }
 
@@ -443,7 +445,7 @@ func (c *countingWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func rendermanpage(gzipw *gzip.Writer, job renderJob, gv globalView) (uint64, error) {
+func rendermanpage(gzipw *gzip.Writer, job renderJob, gv *globalView) (uint64, error) {
 	t, data, err := rendermanpageprep(job, gv)
 	if err != nil {
 		return 0, err

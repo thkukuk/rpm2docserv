@@ -24,30 +24,9 @@ func mustParseAboutTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("about").Parse(bundled.Asset("about.tmpl")))
 }
 
-type byProductStr []string
-
-func (p byProductStr) Len() int      { return len(p) }
-func (p byProductStr) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p byProductStr) Less(i, j int) bool {
-	orderi, oki := sortOrder[p[i]]
-	orderj, okj := sortOrder[p[j]]
-	if !oki || !okj {
-		// if we have know a suite, prefer that over the unknown one
-		if oki && !okj {
-			return true
-		}
-		if okj && !oki {
-			return false
-		}
-		return p[i] < p[j]
-	}
-	return orderi < orderj
-}
-
-
-func renderAux(destDir string, gv globalView) error {
-	aliases := make([]string, 0, len(gv.idxSuites))
-	for alias := range gv.idxSuites {
+func renderAux(destDir string, gv *globalView) error {
+	aliases := make([]string, 0, len(gv.productMapping))
+	for alias := range gv.productMapping {
 		aliases = append(aliases, alias)
 	}
 	sort.Stable(byProductStr(aliases))
@@ -72,7 +51,7 @@ func renderAux(destDir string, gv globalView) error {
 			ProjectUrl:         projectUrl,
 			Aliases:            aliases,
 			LogoUrl:            logoUrl,
-			Products:           productList,
+			Products:           gv.productList,
 			IsOffline:          isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
 		})
@@ -101,7 +80,7 @@ func renderAux(destDir string, gv globalView) error {
 			LogoUrl:        logoUrl,
 			IsOffline:      isOffline,
 			Rpm2docservVersion: rpm2docservVersion,
-			Products:       productList,
+			Products:       gv.productList,
 			Aliases:        aliases,
 		})
 	}); err != nil {

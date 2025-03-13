@@ -27,14 +27,14 @@ type tmplData struct {
 	SrcPkgDirs         []string
 }
 
-func renderExec(dest string, tmpl *template.Template, data tmplData) error {
+func renderExec(dest string, gv *globalView, tmpl *template.Template, data tmplData) error {
 
 	data.ProjectName = projectName
 	data.ProjectUrl = projectUrl
 	data.LogoUrl = logoUrl
 	data.IsOffline = isOffline
 	data.Rpm2docservVersion = rpm2docservVersion
-	data.Products = productList
+	data.Products = gv.productList
 
         return write.Atomically(dest, false, func(w io.Writer) error {
                 return tmpl.Execute(w, data)
