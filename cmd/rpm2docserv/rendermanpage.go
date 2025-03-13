@@ -109,15 +109,21 @@ func convertFile(src string, resolve func(ref string) string) (doc string, toc [
 		return "", nil, err
 	}
 	defer f.Close()
-	r, err := gzip.NewReader(f)
+
+	r := io.Reader(f)
+	gzipr, err := gzip.NewReader(f)
 	if err != nil {
+		//	gzipr.Close()
 		if err == io.EOF {
 			// TODO: better representation of an empty manpage
 			return "This space intentionally left blank.", nil, nil
+		} else if err != gzip.ErrHeader {
+			return "", nil, err
 		}
-		return "", nil, err
+	} else {
+		r = gzipr
+		defer gzipr.Close()
 	}
-	defer r.Close()
 	out, toc, err := convert.ToHTML(r, resolve)
 	if err != nil {
 		return "", nil, fmt.Errorf("convert(%q): %v", src, err)
