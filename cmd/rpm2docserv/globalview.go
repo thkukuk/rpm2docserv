@@ -102,6 +102,9 @@ func (p byProductStr) Less(i, j int) bool {
 	return orderi < orderj
 }
 
+var manPrefix = "/usr/share/man/"
+var gzSuffix = ".gz"
+
 func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*manpage.Meta, filename string, key string) error {
         if _, ok := latestVersion[key]; !ok {
                 return fmt.Errorf("Could not determine latest version")
@@ -127,6 +130,34 @@ func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*m
                 xref[m.Name] = append(xref[m.Name], m)
         }
         return nil
+}
+
+// Get the filelist of an RPM and store the filename of all manual pages
+// found in that RPM
+func getManpageList(fn string) ([]string, error) {
+	var manpageList []string
+
+	filelist, err := rpm.GetRPMFilelist (fn)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, filename := range filelist {
+		if strings.HasPrefix(filename, manPrefix) && strings.HasSuffix(filename, gzSuffix){
+			manpageList = append(manpageList, filename)
+		}
+	}
+	if  len(manpageList) > 0 {
+		// sort by lenght of string means, ../man/fr/man?/... will come
+		// before ../man/fr.UTF-8/man?/...
+		// Same for fr.ISO8859-1
+		// The code is not designed to handle different encodings, doesn't
+		// make any sense and is not needed.
+		sort.Slice(manpageList, func(j, k int) bool {
+			return len(manpageList[j]) < len(manpageList[k])
+		})
+	}
+	return manpageList, nil
 }
 
 // go through the cache directory, find all RPMs and build a pkg entry for it
@@ -162,10 +193,21 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 						return err
 					}
 					if strings.HasSuffix(path, ".rpm") {
+
+						manpageList, err := getManpageList(path)
+						if err != nil {
+							log.Printf("Ignoring %q: %v\n", path, err)
+							return nil
+						}
+						if len(manpageList) == 0 {
+							return nil
+						}
+
 						// Add RPM to package list
 						pkg := new(pkgEntry)
 						pkg.product = product.Name
 						pkg.filename = path
+						pkg.manpageList = manpageList
 
 						var rpmversion, rpmrelease string
 						rpmname := filepath.Base(path)
@@ -215,11 +257,6 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 		}
 	}
 
-	err := getAllContents(res.pkgs)
-	if err != nil {
-		return res, err
-	}
-
 	knownIssues := make(map[string][]error)
 
 	// Build a global view of all the manpages (required for cross-referencing).
@@ -240,5 +277,5 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 		log.Printf("package %q has errors: %v", key, errors)
 	}
 
-	return res, err
+	return res, nil
 }

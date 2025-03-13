@@ -113,7 +113,6 @@ func convertFile(src string, resolve func(ref string) string) (doc string, toc [
 	r := io.Reader(f)
 	gzipr, err := gzip.NewReader(f)
 	if err != nil {
-		//	gzipr.Close()
 		if err == io.EOF {
 			// TODO: better representation of an empty manpage
 			return "This space intentionally left blank.", nil, nil

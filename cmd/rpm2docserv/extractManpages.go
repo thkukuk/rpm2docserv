@@ -438,9 +438,7 @@ func extractManpagesAll(cacheDir string, servingDir string, gv *globalView) (err
 	for product := range gv.products {
 		// Cleanup directory for product
 		productdir := filepath.Join(servingDir, product)
-		// XXX error handling!
 		os.RemoveAll(productdir)
-		os.MkdirAll(productdir, 0755)
 
 		err := extractManpages(cacheDir, servingDir, product, gv)
 		if err != nil {
