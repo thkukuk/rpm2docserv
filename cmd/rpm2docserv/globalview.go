@@ -17,7 +17,7 @@ import (
 
 type pkgEntry struct {
         source     string
-	sourcerpm  string
+	sourcepkg  string
 	product    string
         binarypkg  string
         arch       string
@@ -194,6 +194,13 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 					}
 					if strings.HasSuffix(path, ".rpm") {
 
+						rpmname := filepath.Base(path)
+						binarypkg, rpmversion, rpmrelease, arch, sourcepkg, err := rpm.GetRPMHeader(path)
+						if err != nil {
+							log.Printf("Ignoring %q: %v\n", rpmname, err)
+							return nil
+						}
+
 						manpageList, err := getManpageList(path)
 						if err != nil {
 							log.Printf("Ignoring %q: %v\n", path, err)
@@ -205,25 +212,14 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 
 						// Add RPM to package list
 						pkg := new(pkgEntry)
+						pkg.source, _, _, _, err = rpm.SplitRPMname(sourcepkg)
+						pkg.sourcepkg = sourcepkg
 						pkg.product = product.Name
 						pkg.filename = path
 						pkg.manpageList = manpageList
-
-						var rpmversion, rpmrelease string
-						rpmname := filepath.Base(path)
-						pkg.binarypkg, rpmversion, rpmrelease, pkg.arch, err = rpm.SplitRPMname2(rpmname, path)
-						if err != nil {
-							log.Printf("Ignoring %q: %v\n", rpmname, err)
-							return nil
-						}
+						pkg.binarypkg = binarypkg
+						pkg.arch = arch
 						pkg.version = version.NewVersion(rpmversion + "-" + rpmrelease)
-
-						pkg.sourcerpm, err = rpm.GetSourceRPMName(path)
-						if err != nil {
-							return err
-						}
-						// We don't need the version and rest of the source RPM name
-						pkg.source, _, _, _, err = rpm.SplitRPMname(pkg.sourcerpm)
 
 						res.pkgs = append (res.pkgs, pkg)
 					}

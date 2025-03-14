@@ -292,7 +292,7 @@ func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) 
 		}
 
 		for _, f := range gv.pkgs[i].manpageList {
-			dstf := filepath.Join(tmpdir, gv.pkgs[i].sourcerpm, f)
+			dstf := filepath.Join(tmpdir, gv.pkgs[i].sourcepkg, f)
 
 			err = os.MkdirAll(filepath.Dir(dstf), 0755)
 			if err != nil {
@@ -364,12 +364,12 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 
 			dstf := filepath.Join(targetdir, m.Name + "." + m.Section + "." + m.Language + ".gz")
 
-			srcf, err := getManpageRef(filepath.Join(tmpdir, gv.pkgs[i].sourcerpm, f), filepath.Join(tmpdir, gv.pkgs[i].sourcerpm), gv.pkgs[i].filename)
+			srcf, err := getManpageRef(filepath.Join(tmpdir, gv.pkgs[i].sourcepkg, f), filepath.Join(tmpdir, gv.pkgs[i].sourcepkg), gv.pkgs[i].filename)
 			if err != nil {
 				if len(srcf) > 0 {
 					missing = append (missing, &manLinks{
 						binarypkg: gv.pkgs[i].binarypkg,
-						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, gv.pkgs[i].sourcerpm)),
+						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, gv.pkgs[i].sourcepkg)),
 						target: dstf,
 						err: err,
 					})
