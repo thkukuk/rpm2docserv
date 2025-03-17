@@ -251,10 +251,10 @@ func getManpageRef(f string, tmpdir string, rpmfile string) (string, error) {
 func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) (error) {
 
 	for i := range gv.pkgs {
-		if gv.pkgs[i].product != product {
+		if gv.pkgs[i].Product != product {
 			continue
 		}
-		if len(gv.pkgs[i].manpageList) == 0 {
+		if len(gv.pkgs[i].ManpageList) == 0 {
 			continue
 		}
 
@@ -266,7 +266,7 @@ func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) 
 		}
 
 		// XXX rpm packge als rpm.Unpack
-		rpm2cpio := exec.Command("rpm2cpio", gv.pkgs[i].filename)
+		rpm2cpio := exec.Command("rpm2cpio", gv.pkgs[i].Filename)
 		cpio := exec.Command("cpio", "-D", unrpmDir,
 			"--extract",
 			"--unconditional",
@@ -280,7 +280,7 @@ func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) 
 		cpio.Stderr = &stderrb
 		err = cpio.Start()
 		if err != nil {
-			return fmt.Errorf("Error invoking cpio (%s): %v, stderr: %s",  filepath.Base(gv.pkgs[i].filename), err, stderrb.String())
+			return fmt.Errorf("Error invoking cpio (%s): %v, stderr: %s",  filepath.Base(gv.pkgs[i].Filename), err, stderrb.String())
 		}
 		err = rpm2cpio.Run()
 		if err != nil {
@@ -288,11 +288,11 @@ func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) 
 		}
 		err = cpio.Wait()
 		if err != nil {
-			return fmt.Errorf("Error waiting for cpio (%s): %v, stderr: %s", filepath.Base(gv.pkgs[i].filename), err, stderrb.String())
+			return fmt.Errorf("Error waiting for cpio (%s): %v, stderr: %s", filepath.Base(gv.pkgs[i].Filename), err, stderrb.String())
 		}
 
-		for _, f := range gv.pkgs[i].manpageList {
-			dstf := filepath.Join(tmpdir, gv.pkgs[i].sourcepkg, f)
+		for _, f := range gv.pkgs[i].ManpageList {
+			dstf := filepath.Join(tmpdir, gv.pkgs[i].Sourcepkg, f)
 
 			err = os.MkdirAll(filepath.Dir(dstf), 0755)
 			if err != nil {
@@ -314,8 +314,8 @@ func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) 
 			}
 
 			err = os.Link(srcf, dstf)
-			if err != nil && !errors.Is(err, os.ErrNotExist) && !isWhitelisted(gv.pkgs[i].binarypkg, extractErrorWhitelist) {
-				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].binarypkg, err)
+			if err != nil && !errors.Is(err, os.ErrNotExist) && !isWhitelisted(gv.pkgs[i].Binarypkg, extractErrorWhitelist) {
+				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].Binarypkg, err)
 				continue
 			}
 		}
@@ -341,21 +341,21 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 	}
 
 	for i := range gv.pkgs {
-		if gv.pkgs[i].product != product {
+		if gv.pkgs[i].Product != product {
 			continue
 		}
-		if len(gv.pkgs[i].manpageList) == 0 {
+		if len(gv.pkgs[i].ManpageList) == 0 {
 			continue
 		}
 
-		for _, f := range gv.pkgs[i].manpageList {
+		for _, f := range gv.pkgs[i].ManpageList {
 			m, err :=  manpage.FromManPath(strings.TrimPrefix(f, manPrefix), nil)
 			if err != nil {
 				// not well formated manual page, already reported, ignore it
 				continue
 			}
 
-			targetdir := filepath.Join(servingDir, gv.pkgs[i].product, gv.pkgs[i].binarypkg)
+			targetdir := filepath.Join(servingDir, gv.pkgs[i].Product, gv.pkgs[i].Binarypkg)
 
 			err = os.MkdirAll(targetdir, 0755)
 			if err != nil {
@@ -364,24 +364,24 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 
 			dstf := filepath.Join(targetdir, m.Name + "." + m.Section + "." + m.Language + ".gz")
 
-			srcf, err := getManpageRef(filepath.Join(tmpdir, gv.pkgs[i].sourcepkg, f), filepath.Join(tmpdir, gv.pkgs[i].sourcepkg), gv.pkgs[i].filename)
+			srcf, err := getManpageRef(filepath.Join(tmpdir, gv.pkgs[i].Sourcepkg, f), filepath.Join(tmpdir, gv.pkgs[i].Sourcepkg), gv.pkgs[i].Filename)
 			if err != nil {
 				if len(srcf) > 0 {
 					missing = append (missing, &manLinks{
-						binarypkg: gv.pkgs[i].binarypkg,
-						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, gv.pkgs[i].sourcepkg)),
+						binarypkg: gv.pkgs[i].Binarypkg,
+						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, gv.pkgs[i].Sourcepkg)),
 						target: dstf,
 						err: err,
 					})
 				} else {
-					log.Printf("Error in finding manpage (%s): %v", gv.pkgs[i].binarypkg, err)
+					log.Printf("Error in finding manpage (%s): %v", gv.pkgs[i].Binarypkg, err)
 				}
 				continue
 			}
 
 			err = os.Link(srcf, dstf)
-			if err != nil && !isWhitelisted(gv.pkgs[i].binarypkg, linkErrorWhitelist){
-				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].binarypkg, err)
+			if err != nil && !isWhitelisted(gv.pkgs[i].Binarypkg, linkErrorWhitelist){
+				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].Binarypkg, err)
 				continue
 			}
 		}

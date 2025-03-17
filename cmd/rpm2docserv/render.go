@@ -199,9 +199,9 @@ func writeSourcePkgIndex(product string, gv *globalView) error {
 	// Partition by product for reduced memory usage and better locality of file
 	// system access
 	binariesBySource := make(map[string][]string)
-	for _, p := range gv.pkgs {
-		if p.product == product {
-			binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
+	for _, pkg := range gv.pkgs {
+		if pkg.Product == product {
+			binariesBySource[pkg.Sourcepkg] = append(binariesBySource[pkg.Sourcepkg], pkg.Binarypkg)
 		}
 	}
 

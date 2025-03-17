@@ -142,7 +142,7 @@ func logic(products []Product) error {
 
 	finish := time.Now()
 
-	fmt.Printf("total number of packages: %d\n", globalView.totalNumberPkgs)
+	fmt.Printf("total number of packages: %d\n", globalView.stats.TotalNumberPkgs)
 	fmt.Printf("packages with manpages:   %d\n", globalView.stats.PackagesExtracted)
 	fmt.Printf("manpages rendered:        %d\n", globalView.stats.ManpagesRendered)
 	fmt.Printf("total manpage bytes:      %d\n", globalView.stats.ManpageBytes)

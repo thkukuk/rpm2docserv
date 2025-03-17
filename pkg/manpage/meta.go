@@ -21,6 +21,9 @@ type PkgMeta struct {
 
 	// Product is the product in which this binary package was found.
 	Product string
+
+	// Track list of manpages
+	ManpageList []string
 }
 
 func (p *PkgMeta) SameBinary(o *PkgMeta) bool {

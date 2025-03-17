@@ -15,18 +15,8 @@ import (
 	"github.com/knqyf263/go-rpm-version"
 )
 
-type pkgEntry struct {
-        source     string
-	sourcepkg  string
-	product    string
-        binarypkg  string
-        arch       string
-        filename   string
-        version    version.Version
-	manpageList []string
-}
-
 type stats struct {
+	TotalNumberPkgs   uint64
 	PackagesExtracted uint64
 	ManpagesRendered  uint64
 	ManpageBytes      uint64
@@ -35,10 +25,8 @@ type stats struct {
 }
 
 type globalView struct {
-	// pkgs contains all binary packages we know of.
-	pkgs []*pkgEntry
-	// number of all packages including the one without man pages
-	totalNumberPkgs uint64
+	// pkgs contains all binary packages with manual pages
+	pkgs []*manpage.PkgMeta
 
 	// list of product mames for quick check of existence
         products map[string]bool
@@ -58,14 +46,14 @@ type globalView struct {
 	start time.Time
 }
 
-type byProductPkgVer []*pkgEntry
+type byProductPkgVer []*manpage.PkgMeta
 func (p byProductPkgVer) Len() int      { return len(p) }
 func (p byProductPkgVer) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p byProductPkgVer) Less(i, j int) bool {
-	if p[i].product != p[j].product {
+	if p[i].Product != p[j].Product {
 		// if the product is different, sort according to product name
-		orderi, oki := sortOrder[p[i].product]
-		orderj, okj := sortOrder[p[j].product]
+		orderi, oki := sortOrder[p[i].Product]
+		orderj, okj := sortOrder[p[j].Product]
 		if !oki || !okj {
 			// if we have a known product, prefer that over the unknown one
 			if oki && !okj {
@@ -74,15 +62,15 @@ func (p byProductPkgVer) Less(i, j int) bool {
 			if okj && !oki {
 				return false
 			}
-			return p[i].product < p[j].product
+			return p[i].Product < p[j].Product
 		}
 		return orderi < orderj
 	}
-	if p[i].binarypkg == p[j].binarypkg {
+	if p[i].Binarypkg == p[j].Binarypkg {
 		// Higher versions should come before lower ones, so higher is less
-		return p[j].version.LessThan(p[i].version)
+		return p[j].Version.LessThan(p[i].Version)
 	}
-	return p[i].binarypkg < p[j].binarypkg
+	return p[i].Binarypkg < p[j].Binarypkg
 }
 
 type byProductStr []string
@@ -195,9 +183,9 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 						return err
 					}
 					if strings.HasSuffix(path, ".rpm") {
-						res.totalNumberPkgs++
+						res.stats.TotalNumberPkgs++
 						rpmname := filepath.Base(path)
-						binarypkg, rpmversion, rpmrelease, arch, sourcepkg, err := rpm.GetRPMHeader(path)
+						binarypkg, rpmversion, rpmrelease, _, sourcepkg, err := rpm.GetRPMHeader(path)
 						if err != nil {
 							log.Printf("Ignoring %q: %v\n", rpmname, err)
 							return nil
@@ -209,19 +197,18 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 							return nil
 						}
 						if len(manpageList) == 0 {
+							log.Printf("Ignoring %q: no manpages", path)
 							return nil
 						}
 
 						// Add RPM to package list
-						pkg := new(pkgEntry)
-						pkg.source, _, _, _, err = rpm.SplitRPMname(sourcepkg)
-						pkg.sourcepkg = sourcepkg
-						pkg.product = product.Name
-						pkg.filename = path
-						pkg.manpageList = manpageList
-						pkg.binarypkg = binarypkg
-						pkg.arch = arch
-						pkg.version = version.NewVersion(rpmversion + "-" + rpmrelease)
+						pkg := new(manpage.PkgMeta)
+						pkg.Sourcepkg, _, _, _, err = rpm.SplitRPMname(sourcepkg) // sourcepkg
+						pkg.Product = product.Name
+						pkg.Filename = path
+						pkg.ManpageList = manpageList
+						pkg.Binarypkg = binarypkg
+						pkg.Version = version.NewVersion(rpmversion + "-" + rpmrelease)
 
 						res.pkgs = append (res.pkgs, pkg)
 					}
@@ -243,15 +230,9 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 	// ignoring all lower versions of the same package
 	latestVersion := make(map[string]*manpage.PkgMeta)
 	for _, pkg := range res.pkgs {
-		key := pkg.product + "/" + pkg.binarypkg
+		key := pkg.Product + "/" + pkg.Binarypkg
 		if _, exists := latestVersion[key]; !exists {
-			latestVersion[key] = &manpage.PkgMeta{
-				Filename: pkg.filename,
-				Sourcepkg: pkg.source,
-				Binarypkg: pkg.binarypkg,
-				Version: pkg.version,
-				Product: pkg.product,
-			}
+			latestVersion[key] = pkg
 		}
 	}
 
@@ -259,12 +240,12 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 
 	// Build a global view of all the manpages (required for cross-referencing).
 	for _, pkg := range res.pkgs {
-		if len(pkg.manpageList) == 0 {
+		if len(pkg.ManpageList) == 0 {
 			continue
 		}
 
-		key := pkg.product + "/" + pkg.binarypkg
-		for _, f := range pkg.manpageList {
+		key := pkg.Product + "/" + pkg.Binarypkg
+		for _, f := range pkg.ManpageList {
 			if err := markPresent(latestVersion, res.xref, strings.TrimPrefix(f, manPrefix), key); err != nil {
 				knownIssues[key] = append(knownIssues[key], err)
 			}
