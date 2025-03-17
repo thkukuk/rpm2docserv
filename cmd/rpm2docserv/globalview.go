@@ -37,6 +37,8 @@ type stats struct {
 type globalView struct {
 	// pkgs contains all binary packages we know of.
 	pkgs []*pkgEntry
+	// number of all packages including the one without man pages
+	totalNumberPkgs uint64
 
 	// list of product mames for quick check of existence
         products map[string]bool
@@ -193,7 +195,7 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 						return err
 					}
 					if strings.HasSuffix(path, ".rpm") {
-
+						res.totalNumberPkgs++
 						rpmname := filepath.Base(path)
 						binarypkg, rpmversion, rpmrelease, arch, sourcepkg, err := rpm.GetRPMHeader(path)
 						if err != nil {
@@ -256,13 +258,13 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 	knownIssues := make(map[string][]error)
 
 	// Build a global view of all the manpages (required for cross-referencing).
-	for _, p := range res.pkgs {
-		if len(p.manpageList) == 0 {
+	for _, pkg := range res.pkgs {
+		if len(pkg.manpageList) == 0 {
 			continue
 		}
 
-		key := p.product + "/" + p.binarypkg
-		for _, f := range p.manpageList {
+		key := pkg.product + "/" + pkg.binarypkg
+		for _, f := range pkg.manpageList {
 			if err := markPresent(latestVersion, res.xref, strings.TrimPrefix(f, manPrefix), key); err != nil {
 				knownIssues[key] = append(knownIssues[key], err)
 			}
