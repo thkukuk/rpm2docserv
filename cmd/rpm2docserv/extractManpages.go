@@ -80,10 +80,25 @@ func getUpdateAlternatives(filename string, rpmfile string) (string, error) {
 		return "", fmt.Errorf("rpm.GetRPMScripts(%s) failed: %v\n", rpmfile, err)
 	}
 
+	found_ua := false
 	for i := range scripts {
+		if len(scripts[i]) == 0 {
+			continue
+		}
+		if scripts[i][0] == '#' {
+			continue
+		}
+		if strings.Index(scripts[i], "update-alternatives") < 0 && found_ua == false {
+			continue
+		} else {
+			found_ua = true
+		}
 		pos := strings.Index(scripts[i], filename)
 		if pos >= 0 {
 			str := scripts[i][pos+len(filename):]
+			if len(str) == 0 {
+				continue
+			}
 
 			// Remove all '"' around update-alternatives arguments
 			str = strings.Replace(str, "\"", "", -1)
