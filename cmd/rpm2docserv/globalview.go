@@ -197,7 +197,6 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 							return nil
 						}
 						if len(manpageList) == 0 {
-							log.Printf("Ignoring %q: no manpages", path)
 							return nil
 						}
 
