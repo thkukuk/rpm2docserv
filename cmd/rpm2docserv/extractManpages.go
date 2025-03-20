@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -36,6 +37,7 @@ type manLinks struct {
 	binarypkg string
 	source string
 	target string
+	man *manpage.Meta
 	err error
 }
 
@@ -386,17 +388,26 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 						binarypkg: gv.pkgs[i].Binarypkg,
 						source: strings.TrimPrefix(srcf, filepath.Join(tmpdir, gv.pkgs[i].Sourcepkg)),
 						target: dstf,
+						man: m,
 						err: err,
 					})
 				} else {
-					log.Printf("Error in finding manpage (%s): %v", gv.pkgs[i].Binarypkg, err)
+					x := gv.xref[m.Name]
+					for j := range x {
+						if product == x[j].Package.Product && m.Section == x[j].Section && m.Language == x[j].Language {
+							log.Printf("Deleting entry: %q", gv.xref[m.Name][j])
+							gv.xref[m.Name] = slices.Delete(gv.xref[m.Name], j, j+1)
+							break
+						}
+					}
+					log.Printf("Error in finding manpage (%s/%s): %v", product, gv.pkgs[i].Binarypkg, err)
 				}
 				continue
 			}
 
 			err = os.Link(srcf, dstf)
 			if err != nil && !isWhitelisted(gv.pkgs[i].Binarypkg, linkErrorWhitelist){
-				log.Printf("Cannot hardlink %q (%s): %v", srcf, gv.pkgs[i].Binarypkg, err)
+				log.Printf("Cannot hardlink %q (%s/%s): %v", srcf, product, gv.pkgs[i].Binarypkg, err)
 				continue
 			}
 		}
@@ -405,9 +416,11 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 	}
 
 	for i := range missing {
+		todelete := -1
+
                 m, err :=  manpage.FromManPath(strings.TrimPrefix(missing[i].source, manPrefix), nil)
                 if err != nil {
-			log.Printf("Error with missing manpage (%s): %v", missing[i].binarypkg, err)
+			log.Printf("Error with missing manpage (%s/%s): %v", product, missing[i].binarypkg, err)
 			continue
 		}
 
@@ -418,6 +431,7 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
                                 srcf := filepath.Join(servingDir, x[j].ServingPath() + ".gz")
                                 err = os.Link(srcf, missing[i].target)
                                 if err != nil {
+					todelete = j
                                         continue
                                 }
                                 found = true
@@ -441,7 +455,24 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 		}
 		// No we really didn't found it.
                 if !found {
-			log.Printf("Error in finding manpage (%s): %v", missing[i].binarypkg, missing[i].err)
+			log.Printf("Manpage (%s/%s) not found: %v", product, missing[i].binarypkg, missing[i].err)
+			if todelete >= 0 {
+				log.Printf("Deleting entry: %q", gv.xref[m.Name][todelete])
+				gv.xref[m.Name] = slices.Delete(gv.xref[m.Name], todelete, todelete+1)
+			} else {
+				log.Printf("Need to delete '%q'", missing[i])
+				m := missing[i].man
+				x := gv.xref[m.Name]
+				for j := range x {
+					if product == x[j].Package.Product && m.Section == x[j].Section && m.Language == x[j].Language {
+						log.Printf("Deleting entry: %q", gv.xref[m.Name][j])
+						gv.xref[m.Name] = slices.Delete(gv.xref[m.Name], j, j+1)
+						break
+					}
+				}
+
+			}
+
                         continue
                 }
         }
