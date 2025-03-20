@@ -460,7 +460,6 @@ func extractManpages(cacheDir string, servingDir string, product string, gv *glo
 				log.Printf("Deleting entry: %q", gv.xref[m.Name][todelete])
 				gv.xref[m.Name] = slices.Delete(gv.xref[m.Name], todelete, todelete+1)
 			} else {
-				log.Printf("Need to delete '%q'", missing[i])
 				m := missing[i].man
 				x := gv.xref[m.Name]
 				for j := range x {
