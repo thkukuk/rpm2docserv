@@ -38,8 +38,9 @@ type Index struct {
 }
 
 func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
+	// if no preferred language is set, use english
 	if t == nil {
-		return options[0]
+		t = []language.Tag{language.English}
 	}
 
 	tags := make([]language.Tag, len(options))
