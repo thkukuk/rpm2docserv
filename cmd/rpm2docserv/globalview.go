@@ -34,6 +34,9 @@ type globalView struct {
 	// sorted list of product names
 	productList []string
 
+	// should the product be rendered?
+	renderProduct map[string]bool
+
         // productMapping maps codename and products
 	// e.g. map[MicroOS:Tumbleweed Tumbleweed:Tumbleweed]
         productMapping map[string]string
@@ -157,6 +160,7 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 		products:       make(map[string]bool, len(products)),
 		productList:    make([]string, 0, len(products)),
 		productMapping: make(map[string]string, len(products)),
+		renderProduct:  make(map[string]bool, len(products)),
 		xref:           make(map[string][]*manpage.Meta),
 		stats:          &stats,
 		start:          start,
@@ -167,6 +171,7 @@ func buildGlobalView(products []Product, start time.Time) (globalView, error) {
 		res.productList = append(res.productList, product.Name)
 		res.products[product.Name] = true
 		res.productMapping[product.Name] = product.Name
+		res.renderProduct[product.Name] = ! product.NoRender
 		for _, alias := range product.Alias {
 			res.productMapping[alias] = product.Name
 		}

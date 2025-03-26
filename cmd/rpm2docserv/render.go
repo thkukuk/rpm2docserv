@@ -265,6 +265,11 @@ func renderAll(gv *globalView) error {
 	}
 
 	for _, product := range gv.productList {
+		if ! gv.renderProduct[product] {
+			log.Printf("Skipping rendering %s", product)
+			continue
+		}
+
 		log.Printf("Start rendering %s", product)
 
 		b_pkgdirs := make(map[string]bool)

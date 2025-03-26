@@ -23,6 +23,7 @@ type Product struct {
 	Cache    []string `yaml:"cache,omitempty"`
 	Packages []string `yaml:"packages,omitempty"`
 	Alias    []string `yaml:"alias,omitempty"`
+	NoRender bool     `yaml:"norender"`
 }
 
 type Config struct {
@@ -36,7 +37,8 @@ type Config struct {
 	IsOffline   bool      `yaml:"offline,omitempty"`
 	BaseUrl     string    `yaml:"baseurl,omitempty"`
 	Products    []Product `yaml:"products"`
-	SortOrder   []string  `yaml:"sortorder"`
+	SortOrder   []string  `yaml:"sortorder,omitempty"`
+	ImportIdx   string    `yaml:"import,omitempty"`
 }
 
 var (
@@ -80,6 +82,7 @@ var (
 	projectName string
         projectUrl  string
 	logoUrl     string
+	importIdx   string
 )
 
 // use go build -ldflags "-X main.rpm2docservVersion=<version>" to set the version
@@ -107,6 +110,13 @@ func logic(products []Product) error {
 	log.Printf("Gathering all packages...\n");
 	globalView, err := buildGlobalView (products, start)
 	log.Printf("Gathered all packages, total %d packages", len(globalView.pkgs))
+
+	if len(importIdx) > 0 {
+		err := importIndex (importIdx, &globalView)
+		if err != nil {
+			return fmt.Errorf("importing index: %v", err)
+		}
+	}
 
 	stage3 := time.Now()
 
@@ -228,6 +238,7 @@ func main() {
 		projectUrl = config.ProjectUrl
 		logoUrl = config.LogoUrl
 		products = config.Products
+		importIdx = config.ImportIdx
 	} else {
 		products = make([]Product, 1)
 		products[0].Name = "manpages"
