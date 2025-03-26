@@ -166,15 +166,6 @@ func bestLanguageMatch(current *manpage.Meta, options []*manpage.Meta) *manpage.
 		tags[idx] = m.LanguageTag
 	}
 
-	// NOTE(stapelberg): it would be even better to match on the
-	// user’s Accept-Language HTTP header here, but that is
-	// incompatible with the processing model of pre-generating
-	// all manpages.
-
-	// TODO(stapelberg): to fix the above, we could have
-	// client-side javascript which queries the redirector and
-	// improves cross-references.
-
 	matcher := language.NewMatcher(tags)
 	_, idx, _ := matcher.Match(current.LanguageTag)
 	return options[idx]
