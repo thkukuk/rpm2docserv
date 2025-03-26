@@ -12,6 +12,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require google.golang.org/protobuf v1.36.5
+require google.golang.org/protobuf v1.36.6
 
 require github.com/google/go-cmp v0.6.0 // indirect
