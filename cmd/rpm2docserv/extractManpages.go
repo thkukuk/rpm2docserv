@@ -308,6 +308,14 @@ func unpackRPMs(cacheDir string, tmpdir string, product string, gv *globalView) 
 			return fmt.Errorf("Error waiting for cpio (%s): %v, stderr: %s", filepath.Base(gv.pkgs[i].Filename), err, stderrb.String())
 		}
 
+		// If run as non root, make all files read-/writable for the user.
+		if os.Getuid() != 0 {
+			chmod := exec.Command("chmod", "u+rw", "-R", unrpmDir)
+			if err = chmod.Run(); err != nil {
+				return fmt.Errorf("Error setting u+w permissions: %v", err)
+			}
+		}
+
 		for _, f := range gv.pkgs[i].ManpageList {
 			dstf := filepath.Join(tmpdir, gv.pkgs[i].Sourcepkg, f)
 
