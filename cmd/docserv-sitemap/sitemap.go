@@ -50,6 +50,7 @@ type Products struct {
 	Cache    []string `yaml:"cache,omitempty"`
 	Packages []string `yaml:"packages,omitempty"`
 	Alias    []string `yaml:"alias,omitempty"`
+        NoRender bool     `yaml:"norender"`
 }
 
 type Config struct {
@@ -63,7 +64,8 @@ type Config struct {
         IsOffline   bool       `yaml:"offline,omitempty"`
         BaseUrl     string     `yaml:"baseurl,omitempty"`
         Products    []Products `yaml:"products"`
-        SortOrder   []string   `yaml:"sortorder"`
+        SortOrder   []string   `yaml:"sortorder,omitempty"`
+        ImportIdx   string    `yaml:"import,omitempty"`
 }
 
 func read_yaml_config(conffile string) (Config, error) {
