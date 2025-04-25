@@ -59,12 +59,6 @@
       <li>
 {{- if eq $product "Tumbleweed" }}
        <a href="{{ BaseURLPath }}/{{ $product }}/index.html">Tumbleweed &amp; MicroOS</a>
-      </li>
-      <li>
-       <a href="{{ BaseURLPath }}/Leap-16.0/index.html">Leap 16.0 (Alpha)</a>
-      </li>
-      <li>
-       <a href="{{ BaseURLPath }}/Leap-15.6/index.html">Leap 15.6</a>
 {{ else -}}
        <a href="{{ BaseURLPath }}/{{ $product }}/index.html">{{ $product }}</a>
 {{ end -}}
