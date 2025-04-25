@@ -6,9 +6,9 @@ toolchain go1.24.0
 
 require (
 	github.com/knqyf263/go-rpm-version v0.0.0-20240918084003-2afd7dc6a38f
-	golang.org/x/net v0.37.0
-	golang.org/x/sync v0.12.0
-	golang.org/x/text v0.23.0
+	golang.org/x/net v0.39.0
+	golang.org/x/sync v0.13.0
+	golang.org/x/text v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
