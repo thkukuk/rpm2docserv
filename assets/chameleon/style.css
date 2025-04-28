@@ -41,7 +41,7 @@
 
 .maincontent {
     width: 100%;
-    max-width: 82ch; /* original: 80ch */
+    max-width: 100ch; /* original: 80ch */
     order: 1;
     margin-bottom: 20px;
 }
